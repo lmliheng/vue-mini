@@ -1,0 +1,8 @@
+/.idea
+/.vscode
+/.git
+/字节码
+/*.iml
+/*/*.iml
+node_modules/
+*/node_modules
