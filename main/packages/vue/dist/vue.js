@@ -12,10 +12,19 @@ var Vue = (function (exports) {
             targetMap.set(target, (depsMap = new Map()));
         }
         depsMap.set(key, activeEffect); // keyToDepMap
-        console.log(JSON.stringify(targetMap));
+        console.log(targetMap);
     }
     function triggle(target, key, value) {
         console.log('triggle: 依赖触发');
+        const depsMap = targetMap.get(target);
+        if (!depsMap) {
+            return;
+        }
+        const effect = depsMap.get(key); // 拿到依赖
+        if (!effect) {
+            return;
+        }
+        effect.run();
     }
     function effect(fn) {
         const _effect = new ReaciveEffect(fn);
@@ -51,7 +60,7 @@ var Vue = (function (exports) {
     function createSetter() {
         return function set(target, key, value, receiver) {
             const res = Reflect.set(target, key, value, receiver);
-            triggle();
+            triggle(target, key);
             return res;
         };
     }
