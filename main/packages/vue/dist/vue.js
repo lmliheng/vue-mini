@@ -1,15 +1,25 @@
-(function () {
+var Vue = (function (exports) {
     'use strict';
 
-    function sum(...args) {
-        let sum = 0;
-        for (let i = 0; i < arguments.length; i++) {
-            sum += arguments[i];
+    const mutableHandlers = {};
+
+    const reactiveMap = new WeakMap();
+    function reactive(target) {
+        return createReactiveObject(target, mutableHandlers, reactiveMap);
+    }
+    function createReactiveObject(target, baseHandlers, proxyMap) {
+        const existProxy = proxyMap.get(target);
+        if (existProxy) {
+            return existProxy;
         }
-        return sum;
+        const proxy = new Proxy(target, baseHandlers);
+        proxyMap.set(target, proxy);
+        return proxy;
     }
 
-    console.log(sum(10, 29, 49));
+    exports.reactive = reactive;
 
-})();
+    return exports;
+
+})({});
 //# sourceMappingURL=vue.js.map

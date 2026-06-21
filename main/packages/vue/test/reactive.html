@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-reactive</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { reactive } = Vue
+
+
+    let info = reactive({ name: '张三', age: 18 })
+    console.log(info)
+    console.log(info.name)
+
+</script>
+
+</html>
