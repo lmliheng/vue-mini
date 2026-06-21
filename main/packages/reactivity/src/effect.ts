@@ -1,4 +1,6 @@
-type KeyToDepMap = Map<any, ReaciveEffect>
+import { createDep, Dep } from "./dep"
+
+type KeyToDepMap = Map<any, Dep>
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
 export function track(target: object, key: string | symbol) { // key:unknown
@@ -8,16 +10,31 @@ export function track(target: object, key: string | symbol) { // key:unknown
     if (!depsMap) {
         targetMap.set(target, (depsMap = new Map()))
     }
-    depsMap.set(key, activeEffect) // keyToDepMap
-    console.log(targetMap)
+    // 一个key(读取reactive对象的属性名)对应一个effect，存在问题
+    let dep = depsMap.get(key)
+    if (!dep) { depsMap.set(key, (dep = createDep())) }
+    trackEffects(dep)
 }
+
+// 收集一个key的所有依赖
+export const trackEffects = (dep: Dep) => {
+    return dep.add(activeEffect!) // ！非空断言操作符
+}
+
 export function triggle(target: object, key: string | symbol, value: unknown) {
     console.log('triggle: 依赖触发')
     const depsMap = targetMap.get(target)
     if (!depsMap) { return }
-    const effect = depsMap.get(key) as ReaciveEffect // 拿到依赖
-    if (!effect) { return }
-    effect.run()
+    const dep: Dep | undefined = depsMap.get(key)
+    if (!dep) { return }
+    triggleEffects(dep)
+}
+// 触发一个key的所有依赖
+export const triggleEffects = (dep: Dep) => {
+    let arr = [...dep]
+    for (let i = 0; i < arr.length; i++) {
+        arr[i]?.run()
+    }
 }
 
 export function effect<T = any>(

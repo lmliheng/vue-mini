@@ -1,6 +1,11 @@
 var Vue = (function (exports) {
     'use strict';
 
+    function createDep(effects) {
+        const dep = new Set(effects);
+        return dep;
+    }
+
     const targetMap = new WeakMap();
     function track(target, key) {
         console.log('track: 依赖收集');
@@ -11,21 +16,36 @@ var Vue = (function (exports) {
         if (!depsMap) {
             targetMap.set(target, (depsMap = new Map()));
         }
-        depsMap.set(key, activeEffect); // keyToDepMap
-        console.log(targetMap);
+        // 一个key(读取reactive对象的属性名)对应一个effect，存在问题
+        let dep = depsMap.get(key);
+        if (!dep) {
+            depsMap.set(key, (dep = createDep()));
+        }
+        trackEffects(dep);
     }
+    // 收集一个key的所有依赖
+    const trackEffects = (dep) => {
+        return dep.add(activeEffect); // ！非空断言操作符
+    };
     function triggle(target, key, value) {
         console.log('triggle: 依赖触发');
         const depsMap = targetMap.get(target);
         if (!depsMap) {
             return;
         }
-        const effect = depsMap.get(key); // 拿到依赖
-        if (!effect) {
+        const dep = depsMap.get(key);
+        if (!dep) {
             return;
         }
-        effect.run();
+        triggleEffects(dep);
     }
+    // 触发一个key的所有依赖
+    const triggleEffects = (dep) => {
+        let arr = [...dep];
+        for (let i = 0; i < arr.length; i++) {
+            arr[i]?.run();
+        }
+    };
     function effect(fn) {
         const _effect = new ReaciveEffect(fn);
         _effect.run();

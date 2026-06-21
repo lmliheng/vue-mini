@@ -6,15 +6,23 @@
 </head>
 
 <body>
-    <div id="app"></div>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
 </body>
 
 <script>
     const { reactive, effect } = Vue
     let info = reactive({ name: '张三', age: 18 })
 
+    
     effect(() => {
-        document.querySelector('#app').innerHTML = info.name
+        document.querySelector('#p1').innerHTML = info.name
+    })
+
+    effect(() => {
+        document.querySelector('#p2').innerHTML = info.name
     })
 
     setTimeout(() => {
