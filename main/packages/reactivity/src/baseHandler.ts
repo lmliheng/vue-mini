@@ -13,6 +13,7 @@ function createGetter() {
         // 收集触发getter的函数
         const res = Reflect.get(target, key, receiver)
         track(target, key)
+        return res
 
     }
 }
@@ -20,6 +21,7 @@ function createSetter() {
     return function set(target: object, key: string | symbol, value: unknown, receiver: object) {
         const res = Reflect.set(target, key, value, receiver)
         triggle(target, key, value)
+        return res
     }
 
 }

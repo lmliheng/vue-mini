@@ -1,7 +1,60 @@
 var Vue = (function (exports) {
     'use strict';
 
-    const mutableHandlers = {};
+    const targetMap = new WeakMap();
+    function track(target, key) {
+        console.log('track: 依赖收集');
+        if (!activeEffect) {
+            return;
+        }
+        let depsMap = targetMap.get(target);
+        if (!depsMap) {
+            targetMap.set(target, (depsMap = new Map()));
+        }
+        depsMap.set(key, activeEffect); // keyToDepMap
+        console.log(JSON.stringify(targetMap));
+    }
+    function triggle(target, key, value) {
+        console.log('triggle: 依赖触发');
+    }
+    function effect(fn) {
+        const _effect = new ReaciveEffect(fn);
+        _effect.run();
+    }
+    // 收集getter行为函数
+    let activeEffect;
+    class ReaciveEffect {
+        fn;
+        constructor(fn) {
+            this.fn = fn;
+        }
+        run() {
+            activeEffect = this;
+            return this.fn();
+        }
+    }
+
+    const get = createGetter();
+    const set = createSetter();
+    const mutableHandlers = {
+        get,
+        set
+    };
+    function createGetter() {
+        return function get(target, key, receiver) {
+            // 收集触发getter的函数
+            const res = Reflect.get(target, key, receiver);
+            track(target, key);
+            return res;
+        };
+    }
+    function createSetter() {
+        return function set(target, key, value, receiver) {
+            const res = Reflect.set(target, key, value, receiver);
+            triggle();
+            return res;
+        };
+    }
 
     const reactiveMap = new WeakMap();
     function reactive(target) {
@@ -17,6 +70,7 @@ var Vue = (function (exports) {
         return proxy;
     }
 
+    exports.effect = effect;
     exports.reactive = reactive;
 
     return exports;

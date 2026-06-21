@@ -2,4 +2,4 @@
 
 // console.log(sum(10, 29, 49))
 
-export { reactive } from '@vue/reactivity'
+export { reactive, effect } from '@vue/reactivity'
