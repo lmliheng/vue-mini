@@ -1,10 +1,14 @@
+import { ComputedRefImpl } from "./computed"
 import { createDep, Dep } from "./dep"
 
 type KeyToDepMap = Map<any, Dep>
+
+export type EffectScheduler = (...args) => any
+
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
 export function track(target: object, key: string | symbol) { // key:unknown
-    console.log('track: 依赖收集')
+    // console.log('track: 依赖收集')
     if (!activeEffect) { return }
     let depsMap = targetMap.get(target)
     if (!depsMap) {
@@ -22,18 +26,19 @@ export const trackEffects = (dep: Dep) => {
 }
 
 export function triggle(target: object, key: string | symbol, value: unknown) {
-    console.log('triggle: 依赖触发')
+    // console.log('triggle: 依赖触发')
     const depsMap = targetMap.get(target)
     if (!depsMap) { return }
     const dep: Dep | undefined = depsMap.get(key)
     if (!dep) { return }
     triggleEffects(dep)
 }
+
 // 触发一个key的所有依赖
 export const triggleEffects = (dep: Dep) => {
-    let arr = [...dep]
+    let arr: Array<ReaciveEffect> = [...dep]
     for (let i = 0; i < arr.length; i++) {
-        arr[i]?.run()
+        triggleEffect(arr[i] as ReaciveEffect)
     }
 }
 
@@ -47,8 +52,17 @@ export function effect<T = any>(
 // 收集getter行为函数
 export let activeEffect: ReaciveEffect | undefined
 
+
+/**
+ * 依赖类
+ */
 export class ReaciveEffect<T = any> {
-    constructor(public fn: () => T) {
+
+    computed?: ComputedRefImpl<T>
+    constructor(
+        public fn: () => T,
+        public scheduler: EffectScheduler | null = null
+    ) {
     }
     run() {
         activeEffect = this
@@ -56,3 +70,16 @@ export class ReaciveEffect<T = any> {
     }
 }
 
+/**
+ * 依赖effect执行
+ * @param effect 
+ */
+
+function triggleEffect(effect: ReaciveEffect) {
+    if (effect.scheduler) {
+        effect.scheduler()
+    } else {
+        effect.run()
+    }
+
+}

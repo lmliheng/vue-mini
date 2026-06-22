@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-computed</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { ref, effect, computed } = Vue
+
+    let info = ref('张三')
+    let info2 = ref('哈哈')
+
+    console.log(info)
+
+    const ComputedRef = computed(() => {
+        return info.value + info2.value
+    })
+    effect(() => {
+        document.querySelector('#p1').innerHTML = info.value
+    })
+
+    effect(() => {
+        document.querySelector('#p2').innerHTML = ComputedRef.value
+    })
+
+    setTimeout(() => {
+        info2.value = '不嘻嘻'
+    }, 3000)
+
+</script>
+
+</html>

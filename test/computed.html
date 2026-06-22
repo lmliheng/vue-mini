@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<head>
+    <title>源码-test-computed</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { ref, effect, computed } = Vue
+    debugger
+    let info = ref('张三')
+    let info2 = ref('哈哈')
+
+    console.log(info)
+
+    const ComputedRef = computed(() => {
+        return info.value + info2.value
+    })
+    effect(() => {
+        document.querySelector('#p1').innerHTML = info.value
+    })
+
+    effect(() => {
+        document.querySelector('#p2').innerHTML = ComputedRef.value
+    })
+
+    setTimeout(() => {
+        info.value = '李四'
+    }, 5000)
+
+</script>
+
+</html>

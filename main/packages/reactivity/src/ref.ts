@@ -28,18 +28,17 @@ class RefImpl<T> {
     }
 
     get value() {
-        console.log('get value')
+        // console.log('get value')
         trackRefValue(this)
         return this._value
     }
 
     set value(newVal) {
-        console.log('set value')
-        console.log(hasChanged(this._rawValue, newVal))
+        // console.log('set value')
         if (hasChanged(this._rawValue, newVal)) {
             this._rawValue = newVal
             this._value = toReactive(newVal)
-            triggleRefValue(this)
+            trigglerRefValue(this)
         }
     }
 }
@@ -50,7 +49,7 @@ export function trackRefValue(ref) {
     }
 }
 
-export function triggleRefValue(ref) {
+export function trigglerRefValue(ref) {
     if (ref.dep) {
         triggleEffects(ref.dep)
     }

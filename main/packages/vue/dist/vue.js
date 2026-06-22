@@ -8,7 +8,7 @@ var Vue = (function (exports) {
 
     const targetMap = new WeakMap();
     function track(target, key) {
-        console.log('track: 依赖收集');
+        // console.log('track: 依赖收集')
         if (!activeEffect) {
             return;
         }
@@ -28,7 +28,7 @@ var Vue = (function (exports) {
         return dep.add(activeEffect); // ！非空断言操作符
     };
     function triggle(target, key, value) {
-        console.log('triggle: 依赖触发');
+        // console.log('triggle: 依赖触发')
         const depsMap = targetMap.get(target);
         if (!depsMap) {
             return;
@@ -43,7 +43,7 @@ var Vue = (function (exports) {
     const triggleEffects = (dep) => {
         let arr = [...dep];
         for (let i = 0; i < arr.length; i++) {
-            arr[i]?.run();
+            triggleEffect(arr[i]);
         }
     };
     function effect(fn) {
@@ -52,14 +52,32 @@ var Vue = (function (exports) {
     }
     // 收集getter行为函数
     let activeEffect;
+    /**
+     * 依赖类
+     */
     class ReaciveEffect {
         fn;
-        constructor(fn) {
+        scheduler;
+        computed;
+        constructor(fn, scheduler = null) {
             this.fn = fn;
+            this.scheduler = scheduler;
         }
         run() {
             activeEffect = this;
             return this.fn();
+        }
+    }
+    /**
+     * 依赖effect执行
+     * @param effect
+     */
+    function triggleEffect(effect) {
+        if (effect.scheduler) {
+            effect.scheduler();
+        }
+        else {
+            effect.run();
         }
     }
 
@@ -99,6 +117,7 @@ var Vue = (function (exports) {
         return proxy;
     }
 
+    const isFunction = (value) => typeof value === 'function';
     const isObject = (value) => value !== null && typeof value === 'object';
     const hasChanged = (newVal, oldVal) => !Object.is(newVal, oldVal);
 
@@ -123,17 +142,16 @@ var Vue = (function (exports) {
             this._value = __v_isShallow ? value : toReactive(value);
         }
         get value() {
-            console.log('get value');
+            // console.log('get value')
             trackRefValue(this);
             return this._value;
         }
         set value(newVal) {
-            console.log('set value');
-            console.log(hasChanged(this._rawValue, newVal));
+            // console.log('set value')
             if (hasChanged(this._rawValue, newVal)) {
                 this._rawValue = newVal;
                 this._value = toReactive(newVal);
-                triggleRefValue(this);
+                trigglerRefValue(this);
             }
         }
     }
@@ -142,7 +160,7 @@ var Vue = (function (exports) {
             trackEffects(ref.dep || (ref.dep = createDep()));
         }
     }
-    function triggleRefValue(ref) {
+    function trigglerRefValue(ref) {
         if (ref.dep) {
             triggleEffects(ref.dep);
         }
@@ -154,6 +172,41 @@ var Vue = (function (exports) {
         return isObject(value) ? reactive(value) : value;
     };
 
+    class ComputedRefImpl {
+        dep = undefined;
+        _value;
+        effect;
+        __v_isRef = true;
+        _dirty = true;
+        constructor(getter) {
+            this.effect = new ReaciveEffect(getter, () => {
+                if (!this._dirty) {
+                    this._dirty = true;
+                    trigglerRefValue(this); // 依赖触发写在这...
+                }
+            });
+            this.effect.computed = this; // 给一个computed属性，要在ReactiveEffect里注明?
+        }
+        get value() {
+            trackRefValue(this);
+            if (this._dirty) {
+                this._dirty = false;
+                this._value = this.effect.run();
+            }
+            return this._value;
+        }
+    }
+    function computed(getterOrOptions) {
+        let getter;
+        const onlyGetter = isFunction(getterOrOptions);
+        if (onlyGetter) {
+            getter = getterOrOptions;
+        }
+        const cRef = new ComputedRefImpl(getter);
+        return cRef;
+    }
+
+    exports.computed = computed;
     exports.effect = effect;
     exports.reactive = reactive;
     exports.ref = ref;
