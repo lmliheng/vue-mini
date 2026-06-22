@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-ref-shallow</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { ref, effect } = Vue
+    let info = ref({ name: '哈哈', age: 18 })
+    let info1 = ref('张三')
+    console.log(info)
+    console.log(info1)
+
+    effect(() => {
+        document.querySelector('#p1').innerHTML = info1.value
+    })
+
+    effect(() => {
+        document.querySelector('#p2').innerHTML = info.value.name
+    })
+
+    setTimeout(() => {
+        info1.value = 'hahah'
+    }, 2000)
+
+</script>
+
+</html>

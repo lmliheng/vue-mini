@@ -99,8 +99,64 @@ var Vue = (function (exports) {
         return proxy;
     }
 
+    const isObject = (value) => value !== null && typeof value === 'object';
+    const hasChanged = (newVal, oldVal) => !Object.is(newVal, oldVal);
+
+    function ref(value) {
+        return createRef(value, false);
+    }
+    function createRef(rawValue, shallow) {
+        if (isRef(rawValue)) {
+            return rawValue;
+        }
+        return new RefImpl(rawValue, shallow);
+    }
+    class RefImpl {
+        __v_isShallow;
+        _value;
+        _rawValue; // 原始值
+        dep = undefined; // 依赖收集
+        __v_isRef = true;
+        constructor(value, __v_isShallow) {
+            this.__v_isShallow = __v_isShallow;
+            this._rawValue = value;
+            this._value = __v_isShallow ? value : toReactive(value);
+        }
+        get value() {
+            console.log('get value');
+            trackRefValue(this);
+            return this._value;
+        }
+        set value(newVal) {
+            console.log('set value');
+            console.log(hasChanged(this._rawValue, newVal));
+            if (hasChanged(this._rawValue, newVal)) {
+                this._rawValue = newVal;
+                this._value = toReactive(newVal);
+                triggleRefValue(this);
+            }
+        }
+    }
+    function trackRefValue(ref) {
+        if (activeEffect) {
+            trackEffects(ref.dep || (ref.dep = createDep()));
+        }
+    }
+    function triggleRefValue(ref) {
+        if (ref.dep) {
+            triggleEffects(ref.dep);
+        }
+    }
+    function isRef(r) {
+        return !!(r && r.__v_isRef === true);
+    }
+    const toReactive = (value) => {
+        return isObject(value) ? reactive(value) : value;
+    };
+
     exports.effect = effect;
     exports.reactive = reactive;
+    exports.ref = ref;
 
     return exports;
 

@@ -7,6 +7,5 @@ export function sum(...args) {
     return sum
 }
 
-export function isObject(value: unknown): boolean {
-    return value !== null && typeof value === 'object'
-}
+export const isObject = (value: unknown): boolean => value !== null && typeof value === 'object'
+export const hasChanged = (newVal: any, oldVal: any): boolean => !Object.is(newVal, oldVal)

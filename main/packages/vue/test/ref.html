@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-effect</title>
+    <title>test-ref</title>
     <script src="../dist/vue.js"></script>
 </head>
 
@@ -13,20 +13,20 @@
 </body>
 
 <script>
-    const { reactive, effect } = Vue
-    let info = reactive({ name: '张三', age: 18 })
+    const { ref, effect } = Vue
+    let info = ref({ name: '张三', age: 18 })
     console.log(info)
 
     effect(() => {
-        document.querySelector('#p1').innerHTML = info.name
+        document.querySelector('#p1').innerHTML = info.value.name
     })
 
     effect(() => {
-        document.querySelector('#p2').innerHTML = info.name
+        document.querySelector('#p2').innerHTML = info.value.name
     })
 
     setTimeout(() => {
-        info.name = '李四'
+        info.value.name = '李四'
     }, 5000)
 
 </script>
