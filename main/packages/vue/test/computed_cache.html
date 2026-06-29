@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-computed</title>
+    <title>test-computed-cache</title>
     <script src="../dist/vue.js"></script>
 </head>
 
@@ -23,13 +23,16 @@
     console.log(info)
 
     const ComputedRef = computed(() => {
+        console.log('computed执行')
         return info.value + info2.value
     })
     effect(() => {
         document.querySelector('#p1').innerHTML = info.value
+
     })
 
     effect(() => {
+        document.querySelector('#p2').innerHTML = ComputedRef.value
         document.querySelector('#p2').innerHTML = ComputedRef.value
     })
 

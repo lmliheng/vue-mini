@@ -2,6 +2,11 @@ import { mutableHandlers } from "./baseHandler"
 
 export const reactiveMap = new WeakMap<object, any>()
 
+/**
+ * @reactive响应式入口函数
+ * @param 只能是object类型
+ */
+
 export function reactive(target: object) {
     return createReactiveObject(target, mutableHandlers, reactiveMap)
 }
@@ -17,5 +22,13 @@ function createReactiveObject(
     const proxy = new Proxy(target, baseHandlers)
     proxyMap.set(target, proxy)
     return proxy
+
+}
+
+/**
+ * @author liheng
+ * @用于判断是否是Reactive类型
+ */
+export function isReactive() {
 
 }

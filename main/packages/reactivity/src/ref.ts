@@ -55,9 +55,21 @@ export function trigglerRefValue(ref) {
     }
 }
 
-function isRef(r: any): r is Ref {
+/**
+ * 
+ * @是否是Ref类型
+ * @returns boolean
+ * 
+ */
+export function isRef(r: any): r is Ref {
     return !!(r && r.__v_isRef === true)
 }
+
+/**
+ * 
+ * @入参值如果是对象就变成reactive类型
+ * @returns 
+ */
 
 export const toReactive = <T extends unknown>(value: T): T => {
     return isObject(value) ? reactive(value as object) : value

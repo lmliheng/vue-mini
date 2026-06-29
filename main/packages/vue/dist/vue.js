@@ -1,6 +1,11 @@
 var Vue = (function (exports) {
     'use strict';
 
+    const isArray = (value) => value instanceof Array;
+    const isFunction = (value) => typeof value === 'function';
+    const isObject = (value) => value !== null && typeof value === 'object';
+    const hasChanged = (newVal, oldVal) => !Object.is(newVal, oldVal);
+
     function createDep(effects) {
         const dep = new Set(effects);
         return dep;
@@ -41,9 +46,16 @@ var Vue = (function (exports) {
     }
     // 触发一个key的所有依赖
     const triggleEffects = (dep) => {
-        let arr = [...dep];
-        for (let i = 0; i < arr.length; i++) {
-            triggleEffect(arr[i]);
+        let effects = isArray(dep) ? dep : [...dep];
+        for (const effect of effects) {
+            if (effect.computed) {
+                triggleEffect(effect);
+            }
+        }
+        for (const effect of effects) {
+            if (!effect.computed) {
+                triggleEffect(effect);
+            }
         }
     };
     function effect(fn) {
@@ -116,10 +128,6 @@ var Vue = (function (exports) {
         proxyMap.set(target, proxy);
         return proxy;
     }
-
-    const isFunction = (value) => typeof value === 'function';
-    const isObject = (value) => value !== null && typeof value === 'object';
-    const hasChanged = (newVal, oldVal) => !Object.is(newVal, oldVal);
 
     function ref(value) {
         return createRef(value, false);

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<head>
+    <title>源码-test-watch</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { ref, watch } = Vue
+
+    let info = ref('张三')
+
+    console.log(info)
+
+    watch(info, (newVal, oldVal) => {
+        console.log('监听到数据变化,新值为:', newVal, '旧值为:', oldVal)
+    })
+    setTimeout(() => {
+        info.value = '不嘻嘻'
+    }, 3000)
+
+</script>
+
+</html>

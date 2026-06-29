@@ -1,3 +1,4 @@
+import { isArray } from "@vue/shared"
 import { ComputedRefImpl } from "./computed"
 import { createDep, Dep } from "./dep"
 
@@ -36,9 +37,17 @@ export function triggle(target: object, key: string | symbol, value: unknown) {
 
 // 触发一个key的所有依赖
 export const triggleEffects = (dep: Dep) => {
-    let arr: Array<ReaciveEffect> = [...dep]
-    for (let i = 0; i < arr.length; i++) {
-        triggleEffect(arr[i] as ReaciveEffect)
+    let effects = isArray(dep) ? dep : [...dep]
+
+    for (const effect of effects) {
+        if (effect.computed) {
+            triggleEffect(effect)
+        }
+    }
+    for (const effect of effects) {
+        if (!effect.computed) {
+            triggleEffect(effect)
+        }
     }
 }
 

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-computed</title>
-    <script src="../dist/vue.js"></script>
+    <title>源码-test-computed-cache</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 
 <body>
@@ -23,13 +23,16 @@
     console.log(info)
 
     const ComputedRef = computed(() => {
+        console.log('computed执行')
         return info.value + info2.value
     })
     effect(() => {
         document.querySelector('#p1').innerHTML = info.value
+
     })
 
     effect(() => {
+        document.querySelector('#p2').innerHTML = ComputedRef.value
         document.querySelector('#p2').innerHTML = ComputedRef.value
     })
 

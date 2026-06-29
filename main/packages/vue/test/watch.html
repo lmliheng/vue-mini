@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-watch</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { ref, watch } = Vue
+
+    let info = ref('张三')
+
+    console.log(info)
+    // source,callback,options(可以省略)
+    watch(info, (newVal, oldVal) => {
+        console.log('监听到数据变化,新值为:', newVal, '旧值为:', oldVal)
+    })
+    setTimeout(() => {
+        info.value = '不嘻嘻'
+    }, 3000)
+
+</script>
+
+</html>
