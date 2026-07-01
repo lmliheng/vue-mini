@@ -11,3 +11,4 @@ export const isArray = (value: unknown): boolean => value instanceof Array
 export const isFunction = (value: unknown): boolean => typeof value === 'function'
 export const isObject = (value: unknown): boolean => value !== null && typeof value === 'object'
 export const hasChanged = (newVal: any, oldVal: any): boolean => !Object.is(newVal, oldVal)
+export const extend = Object.assign

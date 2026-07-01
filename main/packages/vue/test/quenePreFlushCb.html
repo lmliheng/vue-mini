@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-scheduler-quenePreFlushCb</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { ref, effect, quenePreFlushCb } = Vue
+
+    let info = ref('张三')
+    let num = ref(1)
+
+    //console.log(info)
+
+    // 输出顺序：1 over 3 3
+    effect(() => {
+        console.log(num.value)
+    }, {
+        scheduler() {
+            quenePreFlushCb(() => console.log(num.value))
+        }
+    })
+
+    num.value = 2
+    num.value = 3
+    console.log('over')
+
+
+
+</script>
+
+</html>

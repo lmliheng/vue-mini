@@ -5,13 +5,57 @@ var Vue = (function (exports) {
     const isFunction = (value) => typeof value === 'function';
     const isObject = (value) => value !== null && typeof value === 'object';
     const hasChanged = (newVal, oldVal) => !Object.is(newVal, oldVal);
+    const extend = Object.assign;
 
     function createDep(effects) {
         const dep = new Set(effects);
         return dep;
     }
 
+    /**
+     * @activeEffect
+     */
+    let activeEffect;
+    /**
+     * @用于存储响应式对象属性和它关联的依赖之间的关系
+     */
     const targetMap = new WeakMap();
+    /**
+     * @effect主函数
+     * @param fn
+     */
+    function effect(fn, options) {
+        const _effect = new ReaciveEffect(fn);
+        // options 存在就把option对象的属性加到effect对象里
+        if (options) {
+            extend(_effect, options);
+        }
+        if (!options || !options.lazy) {
+            _effect.run();
+        }
+    }
+    /**
+     * @effect依赖类
+     */
+    class ReaciveEffect {
+        fn;
+        scheduler;
+        computed;
+        constructor(fn, scheduler = null) {
+            this.fn = fn;
+            this.scheduler = scheduler;
+        }
+        run() {
+            activeEffect = this;
+            return this.fn();
+        }
+    }
+    /**
+     * @收集依赖
+     * @param target
+     * @param key
+     * @returns
+     */
     function track(target, key) {
         // console.log('track: 依赖收集')
         if (!activeEffect) {
@@ -28,10 +72,21 @@ var Vue = (function (exports) {
         }
         trackEffects(dep);
     }
-    // 收集一个key的所有依赖
+    /**
+     * @收集一个key的所有依赖
+     * @param dep
+     * @returns
+     */
     const trackEffects = (dep) => {
         return dep.add(activeEffect); // ！非空断言操作符
     };
+    /**
+     * @trigglce触发依赖
+     * @param target
+     * @param key
+     * @param value
+     * @returns
+     */
     function triggle(target, key, value) {
         // console.log('triggle: 依赖触发')
         const depsMap = targetMap.get(target);
@@ -44,9 +99,13 @@ var Vue = (function (exports) {
         }
         triggleEffects(dep);
     }
-    // 触发一个key的所有依赖
+    /**
+     * @触发一个响应式对象属性key的所有依赖
+     * @param dep
+     */
     const triggleEffects = (dep) => {
         let effects = isArray(dep) ? dep : [...dep];
+        //先触发computed属性的依赖，再触发无computed属性的依赖
         for (const effect of effects) {
             if (effect.computed) {
                 triggleEffect(effect);
@@ -58,33 +117,12 @@ var Vue = (function (exports) {
             }
         }
     };
-    function effect(fn) {
-        const _effect = new ReaciveEffect(fn);
-        _effect.run();
-    }
-    // 收集getter行为函数
-    let activeEffect;
     /**
-     * 依赖类
-     */
-    class ReaciveEffect {
-        fn;
-        scheduler;
-        computed;
-        constructor(fn, scheduler = null) {
-            this.fn = fn;
-            this.scheduler = scheduler;
-        }
-        run() {
-            activeEffect = this;
-            return this.fn();
-        }
-    }
-    /**
-     * 依赖effect执行
+     * 依赖effect的执行
      * @param effect
      */
     function triggleEffect(effect) {
+        // scheduler属性
         if (effect.scheduler) {
             effect.scheduler();
         }
@@ -116,6 +154,10 @@ var Vue = (function (exports) {
     }
 
     const reactiveMap = new WeakMap();
+    /**
+     * @reactive响应式入口函数
+     * @param 只能是object类型
+     */
     function reactive(target) {
         return createReactiveObject(target, mutableHandlers, reactiveMap);
     }
@@ -173,9 +215,20 @@ var Vue = (function (exports) {
             triggleEffects(ref.dep);
         }
     }
+    /**
+     *
+     * @是否是Ref类型
+     * @returns boolean
+     *
+     */
     function isRef(r) {
         return !!(r && r.__v_isRef === true);
     }
+    /**
+     *
+     * @入参值如果是对象就变成reactive类型
+     * @returns
+     */
     const toReactive = (value) => {
         return isObject(value) ? reactive(value) : value;
     };
@@ -214,8 +267,64 @@ var Vue = (function (exports) {
         return cRef;
     }
 
+    let isFlushPending = false;
+    const pendingPreFlushCbs = [];
+    const resolvedPromise = Promise.resolve();
+    /**
+     * @调度系统规则
+     */
+    function quenePreFlushCb(cb) {
+        queneCb(cb, pendingPreFlushCbs);
+    }
+    /**
+     *
+     * @param cb
+     * @param pendingQuene
+     */
+    function queneCb(cb, pendingQuene) {
+        pendingQuene.push(cb);
+        queneFlush();
+    }
+    /**
+     * @依次执行队列中的callback函数
+     */
+    function queneFlush() {
+        if (!isFlushPending) {
+            isFlushPending = true;
+            // 把任务放到微任务里，以改变执行规则
+            resolvedPromise.then(flushJobs);
+        }
+    }
+    /**
+     *
+     */
+    function flushJobs() {
+        isFlushPending = false;
+        flushPreFlushCbs();
+    }
+    /**
+     * @任务队列依次触发job
+     * @param cb
+     */
+    function flushPreFlushCbs() {
+        if (pendingPreFlushCbs.length) {
+            let activePreFlushCbs = [...new Set(pendingPreFlushCbs)];
+            // let activePreFlushCbs = pendingPreFlushCbs.slice()
+            // Set在对函数进行去重比较时，可能会改变数组的内部状态，导致某些元素变成 undefined
+            pendingPreFlushCbs.length = 0;
+            for (let i = 0; i < activePreFlushCbs.length; i++) {
+                // 类型收窄
+                const cb = activePreFlushCbs[i];
+                if (typeof cb === 'function') {
+                    cb();
+                }
+            }
+        }
+    }
+
     exports.computed = computed;
     exports.effect = effect;
+    exports.quenePreFlushCb = quenePreFlushCb;
     exports.reactive = reactive;
     exports.ref = ref;
 

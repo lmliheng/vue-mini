@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-effect懒执行</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { reactive, effect } = Vue
+    let info = reactive({ name: '张三', age: 18 })
+    console.log(info)
+
+    effect(() => {
+        document.querySelector('#p1').innerHTML = info.name
+    }, {
+        lazy: true // effect option 选项
+    })
+
+    effect(() => {
+        document.querySelector('#p2').innerHTML = info.age
+    })
+
+    setTimeout(() => {
+        info.name = '李四'
+    }, 5000)
+
+</script>
+
+</html>

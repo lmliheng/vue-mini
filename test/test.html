@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轮播图 - Vue 3 CDN</title>
+    <style>
+        /* 全局重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .app {
+            width: 80%;
+            max-width: 1200px;
+        }
+
+        /* 轮播图容器 */
+        .carousel-container {
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 轮播项 */
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.6s ease-in-out;
+            opacity: 0;
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 底部指示器 */
+        .indicators {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .indicator {
+            width: 30px;
+            height: 4px;
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .indicator.active {
+            background-color: white;
+            width: 40px;
+        }
+
+        /* 左右箭头按钮 */
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            width: 44px;
+            height: 64px;
+            background-color: rgba(0, 0, 0, 0.35);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+            user-select: none;
+        }
+
+        .arrow:hover {
+            background-color: rgba(0, 0, 0, 0.55);
+        }
+
+        .arrow-left {
+            left: 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .arrow-right {
+            right: 0;
+            border-radius: 8px 0 0 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app">
+        <!-- 模板写在 HTML 中 -->
+        <div class="carousel-container" @mouseenter="pauseCarousel" @mouseleave="startCarousel">
+            <!-- 轮播图片 -->
+            <div 
+                v-for="(image, index) in images" 
+                :key="index"
+                class="carousel-slide"
+                :class="{ active: index === activeIndex }"
+            >
+                <img :src="image.url" :alt="image.title" />
+            </div>
+
+            <!-- 左右箭头 -->
+            <button class="arrow arrow-left" @click="prevSlide">‹</button>
+            <button class="arrow arrow-right" @click="nextSlide">›</button>
+
+            <!-- 底部指示器 -->
+            <div class="indicators">
+                <span 
+                    v-for="(image, index) in images" 
+                    :key="'dot-' + index"
+                    class="indicator"
+                    :class="{ active: index === activeIndex }"
+                    @click="goToSlide(index)"
+                ></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用 CDN 引入 Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <script>
+        // 创建 Vue 应用
+        const app = Vue.createApp({
+            data() {
+                return {
+                    // 图片数据
+                    images: [
+                        { url: 'https://picsum.photos/seed/p1/1200/600', title: '风景 1' },
+                        { url: 'https://picsum.photos/seed/p2/1200/600', title: '风景 2' },
+                        { url: 'https://picsum.photos/seed/p3/1200/600', title: '风景 3' },
+                        { url: 'https://picsum.photos/seed/p4/1200/600', title: '风景 4' },
+                        { url: 'https://picsum.photos/seed/p5/1200/600', title: '风景 5' }
+                    ],
+                    activeIndex: 0,          // 当前显示的图片索引
+                    timer: null,             // 定时器句柄
+                    isPaused: false          // 是否暂停
+                };
+            },
+            methods: {
+                // 切换到上一张
+                prevSlide() {
+                    this.activeIndex = (this.activeIndex - 1 + this.images.length) % this.images.length;
+                },
+                // 切换到下一张
+                nextSlide() {
+                    this.activeIndex = (this.activeIndex + 1) % this.images.length;
+                },
+                // 跳转到指定索引
+                goToSlide(index) {
+                    this.activeIndex = index;
+                },
+                // 开始自动播放
+                startCarousel() {
+                    if (this.timer) return;  // 防止重复启动
+                    this.isPaused = false;
+                    this.timer = setInterval(() => {
+                        this.nextSlide();
+                    }, 3500);  // 每 3.5 秒切换一次
+                },
+                // 暂停自动播放
+                pauseCarousel() {
+                    this.isPaused = true;
+                    if (this.timer) {
+                        clearInterval(this.timer);
+                        this.timer = null;
+                    }
+                }
+            },
+            mounted() {
+                // 组件挂载后启动自动播放
+                this.startCarousel();
+            },
+            beforeUnmount() {
+                // 组件销毁前清除定时器
+                this.pauseCarousel();
+            }
+        });
+
+        // 挂载到 #app
+        app.mount('#app');
+    </script>
+</body>
+</html>
