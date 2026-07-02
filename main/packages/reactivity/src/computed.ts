@@ -1,17 +1,17 @@
 import { isFunction } from "@vue/shared"
 import { Dep } from "./dep"
-import { ReaciveEffect, track } from "./effect"
+import { ReactiveEffect, track } from "./effect"
 import { trackRefValue, trigglerRefValue } from "./ref"
 
 export class ComputedRefImpl<T> {
     public dep?: Dep = undefined
     private _value!: T
-    public readonly effect: ReaciveEffect<T>
+    public readonly effect: ReactiveEffect<T>
     public readonly __v_isRef = true
     public _dirty = true
 
     constructor(getter) {
-        this.effect = new ReaciveEffect(getter, () => {
+        this.effect = new ReactiveEffect(getter, () => {
             if (!this._dirty) {
                 this._dirty = true
                 trigglerRefValue(this) // 依赖触发写在这...

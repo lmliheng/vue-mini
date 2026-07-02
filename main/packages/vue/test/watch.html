@@ -13,18 +13,22 @@
 </body>
 
 <script>
-    const { ref, watch } = Vue
+    const { ref, watch, reactive } = Vue
 
-    let info = ref('张三')
+    let info = reactive({
+        name: '威龙'
+    })
 
     console.log(info)
-    // source,callback,options(可以省略)
+
     watch(info, (newVal, oldVal) => {
         console.log('监听到数据变化,新值为:', newVal, '旧值为:', oldVal)
-    })
+    }, { immadiate: true })
+
     setTimeout(() => {
-        info.value = '不嘻嘻'
+        info.name = '哈哈'
     }, 3000)
+
 
 </script>
 

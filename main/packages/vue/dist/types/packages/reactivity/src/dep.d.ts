@@ -1,3 +1,3 @@
-import { ReaciveEffect } from "./effect";
-export type Dep = Set<ReaciveEffect>;
-export declare function createDep(effects?: ReaciveEffect[]): Dep;
+import { ReactiveEffect } from "./effect";
+export type Dep = Set<ReactiveEffect>;
+export declare function createDep(effects?: ReactiveEffect[]): Dep;

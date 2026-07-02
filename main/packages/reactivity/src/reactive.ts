@@ -2,6 +2,10 @@ import { mutableHandlers } from "./baseHandler"
 
 export const reactiveMap = new WeakMap<object, any>()
 
+export const enum ReactiveFlags {
+    IS_RACTIVE = '__v_isReactive'
+}
+
 /**
  * @reactive响应式入口函数
  * @param 只能是object类型
@@ -20,6 +24,7 @@ function createReactiveObject(
     if (existProxy) { return existProxy }
 
     const proxy = new Proxy(target, baseHandlers)
+    proxy[ReactiveFlags.IS_RACTIVE] = true
     proxyMap.set(target, proxy)
     return proxy
 
@@ -29,6 +34,6 @@ function createReactiveObject(
  * @author liheng
  * @用于判断是否是Reactive类型
  */
-export function isReactive() {
-
+export function isReactive(value): boolean {
+    return !!(value && value[ReactiveFlags.IS_RACTIVE])
 }

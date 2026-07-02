@@ -3,30 +3,31 @@ import { Dep } from "./dep";
 export type KeyToDepMap = Map<any, Dep>;
 export type EffectScheduler = (...args: any[]) => any;
 /**
+ * @懒执行选择项
+ */
+export interface ReactiveEffectOptions {
+    lazy?: boolean;
+    scheduler?: EffectScheduler;
+}
+/**
  * @activeEffect
  */
-export declare let activeEffect: ReaciveEffect | undefined;
+export declare let activeEffect: ReactiveEffect | undefined;
 /**
  * @effect主函数
  * @param fn
  */
-export declare function effect<T = any>(fn: () => T, options?: ReaciveEffectOptions): void;
+export declare function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions): void;
 /**
  * @effect依赖类
  */
-export declare class ReaciveEffect<T = any> {
+export declare class ReactiveEffect<T = any> {
     fn: () => T;
     scheduler: EffectScheduler | null;
     computed?: ComputedRefImpl<T>;
     constructor(fn: () => T, scheduler?: EffectScheduler | null);
     run(): T;
-}
-/**
- * @懒执行选择项
- */
-export interface ReaciveEffectOptions {
-    lazy?: boolean;
-    scheduler?: EffectScheduler;
+    stop(): void;
 }
 /**
  * @收集依赖

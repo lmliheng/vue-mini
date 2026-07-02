@@ -12,3 +12,9 @@ export const isFunction = (value: unknown): boolean => typeof value === 'functio
 export const isObject = (value: unknown): boolean => value !== null && typeof value === 'object'
 export const hasChanged = (newVal: any, oldVal: any): boolean => !Object.is(newVal, oldVal)
 export const extend = Object.assign
+
+
+/**
+ * @空对象
+ */
+export const EMPTY_OBJ = {}

@@ -6,6 +6,10 @@ var Vue = (function (exports) {
     const isObject = (value) => value !== null && typeof value === 'object';
     const hasChanged = (newVal, oldVal) => !Object.is(newVal, oldVal);
     const extend = Object.assign;
+    /**
+     * @空对象
+     */
+    const EMPTY_OBJ = {};
 
     function createDep(effects) {
         const dep = new Set(effects);
@@ -25,7 +29,7 @@ var Vue = (function (exports) {
      * @param fn
      */
     function effect(fn, options) {
-        const _effect = new ReaciveEffect(fn);
+        const _effect = new ReactiveEffect(fn);
         // options 存在就把option对象的属性加到effect对象里
         if (options) {
             extend(_effect, options);
@@ -37,7 +41,7 @@ var Vue = (function (exports) {
     /**
      * @effect依赖类
      */
-    class ReaciveEffect {
+    class ReactiveEffect {
         fn;
         scheduler;
         computed;
@@ -48,6 +52,9 @@ var Vue = (function (exports) {
         run() {
             activeEffect = this;
             return this.fn();
+        }
+        // todo
+        stop() {
         }
     }
     /**
@@ -154,6 +161,10 @@ var Vue = (function (exports) {
     }
 
     const reactiveMap = new WeakMap();
+    var ReactiveFlags;
+    (function (ReactiveFlags) {
+        ReactiveFlags["IS_RACTIVE"] = "__v_isReactive";
+    })(ReactiveFlags || (ReactiveFlags = {}));
     /**
      * @reactive响应式入口函数
      * @param 只能是object类型
@@ -167,8 +178,16 @@ var Vue = (function (exports) {
             return existProxy;
         }
         const proxy = new Proxy(target, baseHandlers);
+        proxy[ReactiveFlags.IS_RACTIVE] = true;
         proxyMap.set(target, proxy);
         return proxy;
+    }
+    /**
+     * @author liheng
+     * @用于判断是否是Reactive类型
+     */
+    function isReactive(value) {
+        return !!(value && value[ReactiveFlags.IS_RACTIVE]);
     }
 
     function ref(value) {
@@ -240,7 +259,7 @@ var Vue = (function (exports) {
         __v_isRef = true;
         _dirty = true;
         constructor(getter) {
-            this.effect = new ReaciveEffect(getter, () => {
+            this.effect = new ReactiveEffect(getter, () => {
                 if (!this._dirty) {
                     this._dirty = true;
                     trigglerRefValue(this); // 依赖触发写在这...
@@ -322,11 +341,73 @@ var Vue = (function (exports) {
         }
     }
 
+    /**
+     * @watch入口函数
+     * @param source
+     * @param cb
+     * @param options
+     */
+    function watch(source, cb, options) {
+        doWatch(source, cb, options);
+    }
+    /**
+     * @Watch的实现
+     * @param source
+     * @param cb
+     * @param param2
+     */
+    function doWatch(source, cb, { immediate, deep } = EMPTY_OBJ) {
+        let getter;
+        if (isReactive(source)) {
+            getter = () => source;
+            deep = true; // 是Reactive对象..deep变成true
+        }
+        else {
+            getter = () => { };
+        }
+        if (cb && deep) {
+            // getter浅拷贝....  
+            const baseGetter = getter;
+            getter = () => baseGetter();
+        }
+        let oldValue = {};
+        // job
+        const job = () => {
+            if (cb) {
+                const newValue = effect.run();
+                // deep 为什么要加入或
+                if (deep || hasChanged(newValue, oldValue)) {
+                    // 触发回调
+                    cb(newValue, oldValue);
+                    oldValue = newValue;
+                }
+            }
+        };
+        let scheduler = () => quenePreFlushCb(job);
+        const effect = new ReactiveEffect(getter, scheduler);
+        if (cb) {
+            if (immediate) {
+                job();
+            }
+            else {
+                oldValue = effect.run();
+            }
+        }
+        else {
+            // 没有回调...
+            effect.run();
+        }
+        return () => {
+            effect.stop();
+        };
+    }
+
     exports.computed = computed;
     exports.effect = effect;
     exports.quenePreFlushCb = quenePreFlushCb;
     exports.reactive = reactive;
     exports.ref = ref;
+    exports.watch = watch;
 
     return exports;
 

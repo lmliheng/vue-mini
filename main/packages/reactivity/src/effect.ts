@@ -6,9 +6,17 @@ export type KeyToDepMap = Map<any, Dep>
 export type EffectScheduler = (...args) => any
 
 /**
+ * @懒执行选择项
+ */
+export interface ReactiveEffectOptions {
+    lazy?: boolean,
+    scheduler?: EffectScheduler
+}
+
+/**
  * @activeEffect
  */
-export let activeEffect: ReaciveEffect | undefined
+export let activeEffect: ReactiveEffect | undefined
 
 /**
  * @用于存储响应式对象属性和它关联的依赖之间的关系
@@ -22,9 +30,9 @@ const targetMap = new WeakMap<any, KeyToDepMap>()
  */
 export function effect<T = any>(
     fn: () => T,
-    options?: ReaciveEffectOptions
+    options?: ReactiveEffectOptions
 ) {
-    const _effect = new ReaciveEffect(fn)
+    const _effect = new ReactiveEffect(fn)
     // options 存在就把option对象的属性加到effect对象里
     if (options) {
         extend(_effect, options)
@@ -38,7 +46,7 @@ export function effect<T = any>(
 /**
  * @effect依赖类
  */
-export class ReaciveEffect<T = any> {
+export class ReactiveEffect<T = any> {
     computed?: ComputedRefImpl<T>
     constructor(
         public fn: () => T,
@@ -49,16 +57,11 @@ export class ReaciveEffect<T = any> {
         activeEffect = this
         return this.fn()
     }
-}
+    // todo
+    stop() {
 
-/**
- * @懒执行选择项
- */
-export interface ReaciveEffectOptions {
-    lazy?: boolean,
-    scheduler?: EffectScheduler
+    }
 }
-
 
 
 /**
@@ -133,7 +136,7 @@ export const triggleEffects = (dep: Dep) => {
  * 依赖effect的执行
  * @param effect 
  */
-function triggleEffect(effect: ReaciveEffect) {
+function triggleEffect(effect: ReactiveEffect) {
     // scheduler属性
     if (effect.scheduler) {
         effect.scheduler()

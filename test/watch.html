@@ -13,9 +13,11 @@
 </body>
 
 <script>
-    const { ref, watch } = Vue
+    const { ref, watch, reactive } = Vue
 
-    let info = ref('张三')
+    let info = reactive({
+        name: '威龙'
+    })
 
     console.log(info)
 
@@ -23,7 +25,7 @@
         console.log('监听到数据变化,新值为:', newVal, '旧值为:', oldVal)
     })
     setTimeout(() => {
-        info.value = '不嘻嘻'
+        info.name = '哈哈'
     }, 3000)
 
 </script>
