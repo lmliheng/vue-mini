@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<head>
+    <title>源码-test-render</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { h, render } = Vue
+    const component = {
+        render() {
+            const vnode = h('div', 'test')
+            return vnode
+        }
+    }
+    const vnode2 = h(component)
+    console.log(vnode2)
+    render(vnode2, document.querySelector('#app'))
+</script>
+
+</html>

@@ -1,6 +1,7 @@
 var Vue = (function (exports) {
     'use strict';
 
+    const isString = (value) => typeof value === 'string';
     const isArray = (value) => value instanceof Array;
     const isFunction = (value) => typeof value === 'function';
     const isObject = (value) => value !== null && typeof value === 'object';
@@ -358,6 +359,7 @@ var Vue = (function (exports) {
      */
     function doWatch(source, cb, { immediate, deep } = EMPTY_OBJ) {
         let getter;
+        // ref还没实现
         if (isReactive(source)) {
             getter = () => source;
             deep = true; // 是Reactive对象..deep变成true
@@ -402,8 +404,99 @@ var Vue = (function (exports) {
         };
     }
 
+    var ShapeFlags;
+    (function (ShapeFlags) {
+        ShapeFlags[ShapeFlags["ELEMENT"] = 1] = "ELEMENT";
+        ShapeFlags[ShapeFlags["FUNCTIONAL_COMPONENT"] = 2] = "FUNCTIONAL_COMPONENT";
+        ShapeFlags[ShapeFlags["STATEFUL_COMPONENT"] = 4] = "STATEFUL_COMPONENT";
+        ShapeFlags[ShapeFlags["TEXT_CHILDREN"] = 8] = "TEXT_CHILDREN";
+        ShapeFlags[ShapeFlags["ARRAY_CHILDREN"] = 16] = "ARRAY_CHILDREN";
+        ShapeFlags[ShapeFlags["SLOTS_CHILDREN"] = 32] = "SLOTS_CHILDREN";
+        ShapeFlags[ShapeFlags["TELEPORT"] = 64] = "TELEPORT";
+        ShapeFlags[ShapeFlags["SUSPENSE"] = 128] = "SUSPENSE";
+        ShapeFlags[ShapeFlags["COMPONENT_SHOULD_KEEP_ALIVE"] = 256] = "COMPONENT_SHOULD_KEEP_ALIVE";
+        ShapeFlags[ShapeFlags["COMPONENT_KEPT_ALIVE"] = 512] = "COMPONENT_KEPT_ALIVE";
+        ShapeFlags[ShapeFlags["COMPONENT"] = 6] = "COMPONENT";
+    })(ShapeFlags || (ShapeFlags = {}));
+
+    /**
+     * @h函数构建vnode的主要逻辑
+     */
+    function createVNode(type, props, children) {
+        const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0;
+        return createBaseVNode(type, props, children, shapeFlag);
+    }
+    function createBaseVNode(type, props, children, shapeFlag) {
+        const vnode = {
+            __v_isVNode: true,
+            type,
+            props,
+            shapeFlag
+        };
+        normalizeChildren(vnode, children);
+        return vnode;
+    }
+    /**
+     * @处理h函数参数里的children属性
+     * 改变shapeFlag
+     * 传入的可能是'hello' , [vnode1,vnode2] ，1
+     * 我在测试案例里写的是文本类型
+     */
+    function normalizeChildren(vnode, children) {
+        let type = 0;
+        //const { shapeFlag } = vnode // 解构
+        if (children == null) {
+            children = null;
+        }
+        else if (isArray(children)) {
+            type = ShapeFlags.ARRAY_CHILDREN;
+        }
+        else if (isFunction(children)) ;
+        else {
+            children = String(children);
+            type = ShapeFlags.TEXT_CHILDREN;
+        }
+        vnode.children = children;
+        vnode.shapeFlag |= type;
+    }
+    function isVNode(value) {
+        return value ? value.__v_isVNode === true : false;
+    }
+
+    /**
+     * @h函数
+     * 使用h函数可以生成vnode
+     */
+    function h(type, propsOrChildren, children) {
+        const l = arguments.length;
+        if (l === 2) {
+            // 是对象不是数组 可能是props或者array children
+            if (isObject(propsOrChildren) && !isArray(propsOrChildren)) {
+                // 是VNOde那第二个参数就是children
+                if (isVNode(propsOrChildren)) {
+                    return createVNode(type, null, [propsOrChildren]);
+                }
+                // 是对象不是VNode,那就是props
+                return createVNode(type, propsOrChildren, null);
+            }
+            else {
+                return createVNode(type, null, propsOrChildren);
+            }
+        }
+        else {
+            if (l > 3) {
+                children = Array.prototype.slice.call(arguments, 2);
+            }
+            else if (l === 3 && isVNode(children)) {
+                children = [children];
+            }
+            return createVNode(type, propsOrChildren, children);
+        }
+    }
+
     exports.computed = computed;
     exports.effect = effect;
+    exports.h = h;
     exports.quenePreFlushCb = quenePreFlushCb;
     exports.reactive = reactive;
     exports.ref = ref;

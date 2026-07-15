@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<head>
+    <title>源码-test-h</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+
+</body>
+
+<script>
+    const { h } = Vue
+    const vnode = h('div', {
+        class: 'style'
+    }, 'hello vue')
+    console.log(vnode)
+
+
+    //h('div','hello')
+
+    //h('div', { class: 'style'}, 'hello vue')
+
+    //h('div', { class: 'style'}, 'hello vue','更多的参数')
+
+    //h('div',[h('p','p1'),h('p','p2')])
+
+    //h('div',{class:style},[h('p','p1'),h('p','p2')])
+
+    // h('',{})
+
+
+
+</script>
+
+</html>
