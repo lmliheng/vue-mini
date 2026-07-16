@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-h</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+
+</body>
+
+<script>
+    const { h, Text, Fragment } = Vue
+
+    const vnode = h(Text, {
+        class: 'style'
+    }, [h('p', 'p1'), h('p', 'p3')])
+    console.log(vnode)
+
+    const vnode1 = h(Fragment, {
+        class: 'style'
+    }, 'fragment')
+    console.log(vnode1)
+
+</script>
+
+</html>

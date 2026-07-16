@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vue Runtime Render</title>
+    <title>test-h_vnode有多种props的情况</title>
     <script src="../dist/vue.js"></script>
 </head>
 
@@ -15,14 +15,17 @@
 
 <script>
     const { h, render } = Vue
-    // const vnode = h('div', { class: 'container' }, [
-    //     h('h1', 'Hello, Vue!'),
-    //     h('p', 'This is a simple example of rendering a virtual DOM node.')
-    // ])
 
-    const vnode = h('div', { class: 'container' }, 'hello vuejs')
+    const vnode = h('textarea', {
+        class: 'container',
+        type: 'text',
+        value: 'test',
+        id: '1'
+    })
     console.log(vnode)
     render(vnode, document.querySelector('#app'))
+
+
 
 </script>
 

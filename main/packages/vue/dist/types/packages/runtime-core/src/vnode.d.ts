@@ -5,6 +5,9 @@ export interface VNode {
     children: any;
     shapeFlag: number;
 }
+export declare const Fragment: unique symbol;
+export declare const Text: unique symbol;
+export declare const Comment: unique symbol;
 /**
  * @h函数构建vnode的主要逻辑
  */
@@ -17,3 +20,4 @@ export declare function createVNode(type: any, props: any, children: any): VNode
  */
 export declare function normalizeChildren(vnode: any, children: any): void;
 export declare function isVNode(value: any): boolean;
+export declare function isSameVNodeType(n1: any, n2: any): boolean;

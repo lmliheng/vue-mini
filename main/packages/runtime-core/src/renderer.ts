@@ -1,0 +1,226 @@
+/**
+ * @render 渲染函数
+ */
+
+import { ShapeFlags } from "packages/shared/src/shapeFlags";
+import { Fragment, isSameVNodeType, isVNode } from "./vnode";
+import { nodeOps } from "packages/runtime-dom/src/nodeOps";
+import { EMPTY_OBJ } from '@vue/shared'
+import { patchProp } from "packages/runtime-dom/src/patchProp";
+
+export interface RendererOptions {
+    /**
+     * 更新dom中属性部分
+     */
+    patchProp(el: Element, key: string, prevValue: any, nextValue: any): void
+
+    /**
+     * 更新标签文本
+     */
+    setElementText(node: Element, text: string): void
+
+    /**
+     * 创建标签，或者叫元素
+     */
+    createElement(type: string)
+
+    /**
+     * 插入到dom树中
+     */
+    insert(el, parent: Element, anchor?): void
+
+    remove(el): void
+
+}
+
+/**
+ * Render主逻辑
+ */
+export function createRenderer(option: RendererOptions) {
+    return baseCreateRenderer(option)
+}
+
+
+
+function baseCreateRenderer(option: RendererOptions) {
+    const {
+        patchProp: hostPatchProp,
+        insert: hostInsert,
+        createElement: hostCreateElement,
+        setElementText: hostSetElementText,
+        remove: hostRemove
+    } = option
+
+    /**
+     * @元素更新入口
+     * 包括挂载和更新两种操作，
+     * 还有卸载
+     */
+    const processElement = (oldVNode, newVNode, container, anchor) => {
+
+        // 挂载
+        if (oldVNode === null) {
+
+            mountElement(newVNode, container, anchor)
+        } else {//更新
+            patchElement(oldVNode, newVNode)
+        }
+    }
+
+    const mountElement = (vnode, container, anchor) => {
+        const { type, props, shapeFlag } = vnode
+        const el = (vnode.el = hostCreateElement(type))
+
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            hostSetElementText(el, vnode.children)
+        } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+
+        }
+
+        if (props) {
+            //for of 需要iterable ，如果是对象会报错
+            for (const key in props) {
+                hostPatchProp(el, key, null, props[key])
+            }
+        }
+        hostInsert(el, container, anchor)
+    }
+
+    // 
+    const patch = (oldVNode, newVNode, container, anchor = null) => {
+
+        if (oldVNode && !isSameVNodeType(oldVNode, newVNode)) {
+            unmount(oldVNode)
+            oldVNode = null
+        }
+
+        if (oldVNode === newVNode) {
+            return
+        }
+        const { type, shapeFlag } = newVNode
+        switch (type) {
+            case Text:
+                break
+            case Comment:
+                break
+            case Fragment:
+                break
+            default:
+
+                if (shapeFlag & ShapeFlags.ELEMENT) {
+                    // 元素
+                    processElement(oldVNode, newVNode, container, anchor)
+                } else if (shapeFlag & ShapeFlags.COMPONENT) {
+                    // 组件
+                }
+        }
+    }
+
+    /**
+     * @卸载虚拟DOM
+     */
+    const unmount = (VNode) => {
+        // 传入.el  DOM
+        hostRemove(VNode.el)
+    }
+
+    /**
+     * @元素更新
+     */
+    const patchElement = (oldVNode, newVNode) => {
+        const el = (newVNode.el = oldVNode.el!)
+        const oldProps = oldVNode.props || EMPTY_OBJ
+        const newProps = newVNode.props || EMPTY_OBJ
+        patchChildren(oldVNode, newVNode, el, null)
+        // 不是patchProp
+        patchProps(el, newVNode, oldProps, newProps)
+    }
+
+    /**
+     * @更新vnode的children属性
+     */
+    const patchChildren = (oldVNode, newVNode, container, anchor) => {
+        const c1 = oldVNode && oldVNode.children
+        const prevShapeFlag = oldVNode ? oldVNode.shapeFlag : 0
+        const c2 = newVNode.children
+        const { shapeFlag } = newVNode
+        // 新vn的children是文本
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            // 旧vn的children是数组
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                // 待定
+            }
+            if (c1 !== c2) {
+                hostSetElementText(container, c2)
+            }
+
+            // 这里为什么要这样写if
+        } else {
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                // diff计算
+
+
+
+
+            } else {
+
+                if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                    hostSetElementText(container, '')
+                }
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+
+                }
+
+            }
+
+        }
+
+
+    }
+
+
+    /**
+     * @和patchProp有什么区别
+     * 
+     */
+    const patchProps = (el, vnode, oldProp, newProp) => {
+        if (oldProp !== newProp) {
+            for (const key in newProp) {
+                const next = newProp[key]
+                const prev = oldProp[key]
+                if (next !== prev) {
+                    hostPatchProp(el, key, prev, next)
+                }
+            }
+        }
+        if (oldProp !== EMPTY_OBJ) {
+            for (const key in oldProp) {
+                if (!(key in newProp)) {
+                    hostPatchProp(el, key, oldProp[key], null)
+                }
+            }
+        }
+    }
+
+    /**
+     * @render入口 
+     */
+    const render = (vnode, container) => {
+
+        if (vnode === null) {
+            if (container._vnode) {
+                //
+                unmount(container._vnode)
+            }
+        } else {
+            patch(container._vnode || null, vnode, container)
+        }
+        container._vnode = vnode
+    }
+
+    // 这样返回...
+    return { render }
+
+}
+
+

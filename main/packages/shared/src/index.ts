@@ -7,6 +7,8 @@ export function sum(...args) {
     return sum
 }
 
+
+export const isOn = (key: string) => /^on{^a-z}/.test(key)
 export const isString = (value: unknown): boolean => typeof value === 'string'
 export const isArray = (value: unknown): boolean => value instanceof Array
 export const isFunction = (value: unknown): boolean => typeof value === 'function'

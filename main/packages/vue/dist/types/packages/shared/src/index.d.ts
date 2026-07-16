@@ -1,4 +1,5 @@
 export declare function sum(...args: any[]): number;
+export declare const isOn: (key: string) => boolean;
 export declare const isString: (value: unknown) => boolean;
 export declare const isArray: (value: unknown) => boolean;
 export declare const isFunction: (value: unknown) => boolean;

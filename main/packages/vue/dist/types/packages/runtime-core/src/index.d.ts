@@ -1,3 +1,5 @@
 export { quenePreFlushCb } from './scheduler';
 export { watch } from './apiWatch';
 export { h } from './h';
+export { Text, Fragment, Comment } from './vnode';
+export { createRenderer } from './renderer';

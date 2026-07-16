@@ -1,5 +1,6 @@
 
-import { isArray, isFunction, isString } from "@vue/shared"
+import { isArray, isFunction, isObject, isString } from "@vue/shared"
+import { normalizeClass } from "packages/shared/src/normalizeProps"
 import { ShapeFlags } from "packages/shared/src/shapeFlags"
 
 export interface VNode {
@@ -10,11 +11,25 @@ export interface VNode {
     shapeFlag: number
 }
 
+// 组件: 进入isObeject 进入shapefalgs.stateful_comonent
+export const Fragment = Symbol('Fragment') // 段
+export const Text = Symbol('Text')
+export const Comment = Symbol('Comment')
+
 /**
  * @h函数构建vnode的主要逻辑
  */
 export function createVNode(type, props, children): VNode {
-    const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0
+    if (props) {
+        let { class: klass, style } = props
+        if (klass && !isString(klass)) {
+            props.class = normalizeClass(klass)
+        }
+        // style.
+        // if()
+    }
+
+    const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0
     return createBaseVNode(type, props, children, shapeFlag)
 }
 
@@ -26,6 +41,7 @@ function createBaseVNode(type, props, children, shapeFlag): VNode {
         shapeFlag
     } as VNode
 
+    // 对props的class和style进行增强处理
     normalizeChildren(vnode, children)
     return vnode
 
@@ -56,4 +72,9 @@ export function normalizeChildren(vnode, children) {
 
 export function isVNode(value: any): boolean {
     return value ? value.__v_isVNode === true : false
+}
+
+
+export function isSameVNodeType(n1, n2) {
+    return n1.type === n2.type
 }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-h</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+
+</body>
+
+<script>
+    const { h, Text, Fragment } = Vue
+    // <h1 class='red scale'>...</h1>
+    // 这里需要class增强，在vue里可以动态变化class类型
+
+    
+    // const vnode = h('h1', {
+    //     class: {
+    //         red: true,
+    //         isFold: false,
+    //         scale: true
+    //     }
+    // }, [h('p', 'p1'), h('p', 'p3')])
+
+    const vnode = h('h1', {
+        class: ['red', 'isFold', 'scale']
+    }, [h('p', 'p1'), h('p', 'p3')])
+
+
+    console.log(vnode)
+
+</script>
+
+</html>
