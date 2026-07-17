@@ -17,5 +17,13 @@ export const nodeOps = {
         if (parent) {
             parent.removeChild(child)
         }
+    },
+    createText: (text) => {
+        return document.createTextNode(text)
+    },
+    // node 是一个element
+    setText: (node, text) => {
+        node.nodeValue = text
     }
+
 }

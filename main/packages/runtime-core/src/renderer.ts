@@ -31,6 +31,10 @@ export interface RendererOptions {
 
     remove(el): void
 
+    setText(el, text): void
+
+    createText(text)
+
 }
 
 /**
@@ -48,7 +52,10 @@ function baseCreateRenderer(option: RendererOptions) {
         insert: hostInsert,
         createElement: hostCreateElement,
         setElementText: hostSetElementText,
-        remove: hostRemove
+        remove: hostRemove,
+        createText: hostCreateText,
+        setText: hostSetText,
+
     } = option
 
     /**
@@ -66,6 +73,24 @@ function baseCreateRenderer(option: RendererOptions) {
             patchElement(oldVNode, newVNode)
         }
     }
+
+    /**
+     * type是Text时进入
+     * 
+     */
+    function processText(oldVNode, newVNode, container, anchor) {
+        if (oldVNode === null) {
+            newVNode.el = hostCreateText(newVNode.children as string)
+            hostInsert(newVNode.el, container, anchor)
+        } else {
+            const el = (newVNode.el = oldVNode.el!)
+            if (newVNode.children !== oldVNode.children) {
+                hostSetText(el, newVNode.children as string)
+            }
+        }
+    }
+
+
 
     const mountElement = (vnode, container, anchor) => {
         const { type, props, shapeFlag } = vnode
@@ -100,6 +125,7 @@ function baseCreateRenderer(option: RendererOptions) {
         const { type, shapeFlag } = newVNode
         switch (type) {
             case Text:
+                processText(oldVNode, newVNode, container, anchor)
                 break
             case Comment:
                 break
@@ -135,6 +161,7 @@ function baseCreateRenderer(option: RendererOptions) {
         // 不是patchProp
         patchProps(el, newVNode, oldProps, newProps)
     }
+
 
     /**
      * @更新vnode的children属性

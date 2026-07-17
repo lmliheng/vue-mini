@@ -4,29 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>test-h_vnode有多种props的情况</title>
+    <title>test-render 事件更新</title>
     <script src="../dist/vue.js"></script>
 </head>
 
 <body>
     <div id="app"></div>
+    <button onclick="alert('test')">click</button>
 
 </body>
 
 <script>
     const { h, render } = Vue
 
-    const vnode = h('textarea', {
-        class: 'container',
-        type: 'text',
-        value: 'test',
-        id: '1',
-        
-    })
+    const vnode = h('button', { onClick() { alert('test') } }, 'click')
     console.log(vnode)
     render(vnode, document.querySelector('#app'))
 
-
+    setTimeout(() => {
+        const vnode2 = h('button', { onClick() { alert('点击') } }, '点击')
+        render(vnode2, document.querySelector('#app'))
+    }, 2000)
 
 </script>
 

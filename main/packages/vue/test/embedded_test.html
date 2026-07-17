@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>完全内嵌测试 - 零外部依赖</title>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+// ===== 完整的 vue.js（24396 bytes） =====
 var Vue = (function (exports) {
     'use strict';
 
@@ -550,7 +561,7 @@ var Vue = (function (exports) {
         return baseCreateRenderer(option);
     }
     function baseCreateRenderer(option) {
-        const { patchProp: hostPatchProp, insert: hostInsert, createElement: hostCreateElement, setElementText: hostSetElementText, remove: hostRemove, createText: hostCreateText, setText: hostSetText, } = option;
+        const { patchProp: hostPatchProp, insert: hostInsert, createElement: hostCreateElement, setElementText: hostSetElementText, remove: hostRemove } = option;
         /**
          * @元素更新入口
          * 包括挂载和更新两种操作，
@@ -565,22 +576,6 @@ var Vue = (function (exports) {
                 patchElement(oldVNode, newVNode);
             }
         };
-        /**
-         * type是Text时进入
-         *
-         */
-        function processText(oldVNode, newVNode, container, anchor) {
-            if (oldVNode === null) {
-                newVNode.el = hostCreateText(newVNode.children);
-                hostInsert(newVNode.el, container, anchor);
-            }
-            else {
-                const el = (newVNode.el = oldVNode.el);
-                if (newVNode.children !== oldVNode.children) {
-                    hostSetText(el, newVNode.children);
-                }
-            }
-        }
         const mountElement = (vnode, container, anchor) => {
             const { type, props, shapeFlag } = vnode;
             const el = (vnode.el = hostCreateElement(type));
@@ -608,7 +603,6 @@ var Vue = (function (exports) {
             const { type, shapeFlag } = newVNode;
             switch (type) {
                 case Text:
-                    processText(oldVNode, newVNode, container, anchor);
                     break;
                 case Comment:
                     break;
@@ -727,13 +721,6 @@ var Vue = (function (exports) {
             if (parent) {
                 parent.removeChild(child);
             }
-        },
-        createText: (text) => {
-            return document.createTextNode(text);
-        },
-        // node 是一个element
-        setText: (node, text) => {
-            node.nodeValue = text;
         }
     };
 
@@ -875,10 +862,6 @@ var Vue = (function (exports) {
         return key in el;
     }
 
-    /**
-     * @首次调用并缓存，后续使用避免再次创建
-     * 使用nodeops和patch可以实现平台迁移，如小程序，webGL等
-     */
     const RendererOptions = extend({ patchProp }, nodeOps);
     let renderer;
     function ensureRenderer() {
@@ -904,3 +887,23 @@ var Vue = (function (exports) {
 
 })({});
 //# sourceMappingURL=vue.js.map
+
+    </script>
+
+    <script>
+// ===== 测试代码 =====
+console.log('1. Vue 对象存在?', !!Vue);
+console.log('2. Vue.keys:', Object.keys(Vue));
+try {
+    const { h, render } = Vue;
+    console.log('3. h 和 render 解构成功');
+    const vnode = h('button', { onClick() { alert('✅ 事件触发成功！'); } }, '点击我');
+    console.log('4. VNode 创建成功:', vnode);
+    render(vnode, document.querySelector('#app'));
+    console.log('5. 渲染完成！如果看到这行，说明一切正常。');
+} catch(e) {
+    console.error('❌ 错误:', e.message, e.stack);
+}
+    </script>
+</body>
+</html>

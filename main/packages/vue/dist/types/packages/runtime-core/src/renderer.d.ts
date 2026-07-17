@@ -19,6 +19,8 @@ export interface RendererOptions {
      */
     insert(el: any, parent: Element, anchor?: any): void;
     remove(el: any): void;
+    setText(el: any, text: any): void;
+    createText(text: any): any;
 }
 /**
  * Render主逻辑

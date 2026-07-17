@@ -6,4 +6,6 @@ export declare const nodeOps: {
     createElement: (tag: any) => Element;
     setElementText: (el: any, text: any) => void;
     remove: (child: any) => void;
+    createText: (text: any) => Text;
+    setText: (node: any, text: any) => void;
 };
