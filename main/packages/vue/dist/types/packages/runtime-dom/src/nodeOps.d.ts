@@ -8,4 +8,5 @@ export declare const nodeOps: {
     remove: (child: any) => void;
     createText: (text: any) => Text;
     setText: (node: any, text: any) => void;
+    createComment: (text: any) => Comment;
 };

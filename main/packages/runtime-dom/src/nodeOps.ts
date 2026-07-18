@@ -24,6 +24,9 @@ export const nodeOps = {
     // node 是一个element
     setText: (node, text) => {
         node.nodeValue = text
+    },
+    createComment: (text) => {
+        return document.createComment(text)
     }
 
 }

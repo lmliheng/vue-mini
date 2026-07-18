@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<head>
+    <title>源码-test-render-组件</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { h, Fragment, render } = Vue
+    
+    const component = {
+        render() {
+            return h('h1', {
+                style: {
+                    color: 'red',
+
+                }
+            }, 'hello vue')
+        }
+    }
+    const vnode = h(component)
+    // vnode type是一个object shapeFlag=4
+    console.log(vnode)
+    render(vnode, document.querySelector('#app'))
+
+    // setTimeout(() => {
+    //     const vnode1 = h(Comment, 'test')
+    //     render(vnode1, document.querySelector('#app'))
+    // }, 5000)
+</script>
+
+</html>

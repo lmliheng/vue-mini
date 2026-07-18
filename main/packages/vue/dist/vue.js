@@ -541,6 +541,22 @@ var Vue = (function (exports) {
     }
 
     /**
+     * @组件工具
+     *
+     */
+    function normalizeVNode(child) {
+        if (isObject(child)) {
+            return cloneIfMounted(child);
+        }
+        else {
+            return createVNode(Text, null, child);
+        }
+    }
+    function cloneIfMounted(obj) {
+        return obj;
+    }
+
+    /**
      * @render 渲染函数
      */
     /**
@@ -550,7 +566,7 @@ var Vue = (function (exports) {
         return baseCreateRenderer(option);
     }
     function baseCreateRenderer(option) {
-        const { patchProp: hostPatchProp, insert: hostInsert, createElement: hostCreateElement, setElementText: hostSetElementText, remove: hostRemove, createText: hostCreateText, setText: hostSetText, } = option;
+        const { patchProp: hostPatchProp, insert: hostInsert, createElement: hostCreateElement, setElementText: hostSetElementText, remove: hostRemove, createText: hostCreateText, setText: hostSetText, createComment: hostCreateComment } = option;
         /**
          * @元素更新入口
          * 包括挂载和更新两种操作，
@@ -581,6 +597,37 @@ var Vue = (function (exports) {
                 }
             }
         }
+        function processCommentNode(oldVNode, newVNode, container, anchor) {
+            if (oldVNode === null) {
+                newVNode.el = hostCreateComment((newVNode.children || ''));
+                hostInsert(newVNode.el, container, anchor);
+            }
+            else {
+                // 不更新
+                newVNode.el = oldVNode.el;
+            }
+        }
+        function processFragment(oldVNode, newVNode, container, anchor) {
+            if (oldVNode === null) {
+                mountChildren(newVNode.children, container, anchor);
+            }
+            else {
+                patchChildren(oldVNode, newVNode, container);
+            }
+        }
+        /**
+         * @
+         * 这里面的children是一个数组或者字符串？
+         */
+        const mountChildren = (children, container, anchor) => {
+            if (isString(children)) {
+                children = children.split('');
+            }
+            for (let i = 0; i < children.length; i++) {
+                const child = (children = normalizeVNode(children[i]));
+                patch(null, child, container, anchor);
+            }
+        };
         const mountElement = (vnode, container, anchor) => {
             const { type, props, shapeFlag } = vnode;
             const el = (vnode.el = hostCreateElement(type));
@@ -611,8 +658,10 @@ var Vue = (function (exports) {
                     processText(oldVNode, newVNode, container, anchor);
                     break;
                 case Comment:
+                    processCommentNode(oldVNode, newVNode, container, anchor);
                     break;
                 case Fragment:
+                    processFragment(oldVNode, newVNode, container, anchor);
                     break;
                 default:
                     if (shapeFlag & ShapeFlags.ELEMENT) {
@@ -734,6 +783,9 @@ var Vue = (function (exports) {
         // node 是一个element
         setText: (node, text) => {
             node.nodeValue = text;
+        },
+        createComment: (text) => {
+            return document.createComment(text);
         }
     };
 

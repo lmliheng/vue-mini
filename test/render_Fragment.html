@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-render-Fragment</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { h, Fragment, render } = Vue
+    const vnode = h(Fragment, 'hello vue')
+    console.log(vnode)
+    render(vnode, document.querySelector('#app'))
+
+    // setTimeout(() => {
+    //     const vnode1 = h(Comment, 'test')
+    //     render(vnode1, document.querySelector('#app'))
+    // }, 5000)
+</script>
+
+</html>

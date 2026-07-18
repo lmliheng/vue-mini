@@ -3,10 +3,12 @@
  */
 
 import { ShapeFlags } from "packages/shared/src/shapeFlags";
-import { Fragment, isSameVNodeType, isVNode } from "./vnode";
+import { Fragment, isSameVNodeType, isVNode, normalizeChildren } from "./vnode";
 import { nodeOps } from "packages/runtime-dom/src/nodeOps";
-import { EMPTY_OBJ } from '@vue/shared'
+import { EMPTY_OBJ, isString } from '@vue/shared'
 import { patchProp } from "packages/runtime-dom/src/patchProp";
+import { normalizeVNode } from "./componentRenderUtils";
+import { createComponentInstance } from "./component";
 
 export interface RendererOptions {
     /**
@@ -35,6 +37,7 @@ export interface RendererOptions {
 
     createText(text)
 
+    createComment(text)
 }
 
 /**
@@ -55,7 +58,7 @@ function baseCreateRenderer(option: RendererOptions) {
         remove: hostRemove,
         createText: hostCreateText,
         setText: hostSetText,
-
+        createComment: hostCreateComment
     } = option
 
     /**
@@ -91,6 +94,54 @@ function baseCreateRenderer(option: RendererOptions) {
     }
 
 
+    function processCommentNode(oldVNode, newVNode, container, anchor) {
+        if (oldVNode === null) {
+            newVNode.el = hostCreateComment((newVNode.children as string || ''))
+            hostInsert(newVNode.el, container, anchor)
+        } else {
+            // 不更新
+            newVNode.el = oldVNode.el
+        }
+    }
+
+    function processFragment(oldVNode, newVNode, container, anchor) {
+        if (oldVNode === null) {
+            mountChildren(newVNode.children, container, anchor)
+        } else {
+            patchChildren(oldVNode, newVNode, container, anchor)
+        }
+    }
+
+    function processComponent(oldVNode, newVNode, container, anchor) {
+        if (oldVNode === null) {
+            mountComponent(newVNode, container, anchor)
+        }
+    }
+
+    const mountComponent = (newVNode, container, anchor) => {
+        newVNode.component = createComponentInstance(newVNode)
+        const instance = newVNode.component
+        //
+        setupComponent(instance)
+        // 
+        setupRenderEffect(instance, newVNode, container, anchor)
+    }
+
+    /**
+     * @
+     * 这里面的children是一个数组或者字符串？
+     */
+    const mountChildren = (children, container, anchor) => {
+        if (isString(children)) {
+            children = children.split('')
+        }
+        for (let i = 0; i < children.length; i++) {
+            const child = (children = normalizeVNode(children[i]))
+            patch(null, child, container, anchor)
+        }
+    }
+
+
 
     const mountElement = (vnode, container, anchor) => {
         const { type, props, shapeFlag } = vnode
@@ -111,9 +162,10 @@ function baseCreateRenderer(option: RendererOptions) {
         hostInsert(el, container, anchor)
     }
 
+
+
     // 
     const patch = (oldVNode, newVNode, container, anchor = null) => {
-
         if (oldVNode && !isSameVNodeType(oldVNode, newVNode)) {
             unmount(oldVNode)
             oldVNode = null
@@ -128,8 +180,10 @@ function baseCreateRenderer(option: RendererOptions) {
                 processText(oldVNode, newVNode, container, anchor)
                 break
             case Comment:
+                processCommentNode(oldVNode, newVNode, container, anchor)
                 break
             case Fragment:
+                processFragment(oldVNode, newVNode, container, anchor)
                 break
             default:
 
@@ -138,6 +192,7 @@ function baseCreateRenderer(option: RendererOptions) {
                     processElement(oldVNode, newVNode, container, anchor)
                 } else if (shapeFlag & ShapeFlags.COMPONENT) {
                     // 组件
+                    // processComponent()
                 }
         }
     }
@@ -240,8 +295,11 @@ function baseCreateRenderer(option: RendererOptions) {
                 unmount(container._vnode)
             }
         } else {
+
+            // 进入patch函数
             patch(container._vnode || null, vnode, container)
         }
+        // 完成后 在container打上_vnode属性
         container._vnode = vnode
     }
 

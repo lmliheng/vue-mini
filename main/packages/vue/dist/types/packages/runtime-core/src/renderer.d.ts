@@ -21,6 +21,7 @@ export interface RendererOptions {
     remove(el: any): void;
     setText(el: any, text: any): void;
     createText(text: any): any;
+    createComment(text: any): any;
 }
 /**
  * Render主逻辑
