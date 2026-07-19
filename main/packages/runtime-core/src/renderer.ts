@@ -7,8 +7,10 @@ import { Fragment, isSameVNodeType, isVNode, normalizeChildren } from "./vnode";
 import { nodeOps } from "packages/runtime-dom/src/nodeOps";
 import { EMPTY_OBJ, isString } from '@vue/shared'
 import { patchProp } from "packages/runtime-dom/src/patchProp";
-import { normalizeVNode } from "./componentRenderUtils";
-import { createComponentInstance } from "./component";
+import { normalizeVNode, renderComponentRoot } from "./componentRenderUtils";
+import { createComponentInstance, setupComponent } from "./component";
+import { ReactiveEffect } from "packages/reactivity/src/effect";
+import { quenePreFlushCb } from "./scheduler";
 
 export interface RendererOptions {
     /**
@@ -48,7 +50,7 @@ export function createRenderer(option: RendererOptions) {
 }
 
 
-
+// TODO:需要阅读baseCreateRender
 function baseCreateRenderer(option: RendererOptions) {
     const {
         patchProp: hostPatchProp,
@@ -282,6 +284,29 @@ function baseCreateRenderer(option: RendererOptions) {
                 }
             }
         }
+    }
+
+
+    /**
+     * 需要再看
+     */
+    const setupRenderEffect = (instance, initialVNode, container, anchor) => {
+        /**
+         * 组件更新
+         */
+        const componentUpdateFn = () => {
+            if (!instance.isMounted) {
+                const subTree = (instance.subTree = renderComponentRoot(instance))
+                patch(null, subTree, container, anchor)
+                initialVNode.el = subTree.el
+            }
+        }
+        const effect = (instance.effect = new ReactiveEffect(
+            componentUpdateFn,
+            () => quenePreFlushCb(update)
+        ))
+        const update = (instance.update = () => effect.run())
+        update()
     }
 
     /**
