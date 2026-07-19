@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-render-组件</title>
-    <script src="../dist/vue.js"></script>
+    <title>源码-test-render-响应式组件</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 
 <body>
@@ -10,18 +10,23 @@
 </body>
 
 <script>
-
-    
     const { h, Fragment, render } = Vue
 
     const component = {
+        data() {
+            return {
+                msg: 'hello vue 响应式组件'
+            }
+
+        },
+
         render() {
             return h('h1', {
                 style: {
                     color: 'red',
 
                 }
-            }, 'hello vue')
+            }, this.msg)
         }
     }
     const vnode = h(component)
@@ -29,6 +34,10 @@
     console.log(vnode)
     render(vnode, document.querySelector('#app'))
 
+    // setTimeout(() => {
+    //     const vnode1 = h(Comment, 'test')
+    //     render(vnode1, document.querySelector('#app'))
+    // }, 5000)
 </script>
 
 </html>

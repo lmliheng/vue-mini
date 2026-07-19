@@ -4,6 +4,7 @@ export interface VNode {
     props: any;
     children: any;
     shapeFlag: number;
+    component: any;
 }
 export declare const Fragment: unique symbol;
 export declare const Text: unique symbol;

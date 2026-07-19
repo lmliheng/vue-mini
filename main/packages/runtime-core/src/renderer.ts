@@ -194,7 +194,8 @@ function baseCreateRenderer(option: RendererOptions) {
                     processElement(oldVNode, newVNode, container, anchor)
                 } else if (shapeFlag & ShapeFlags.COMPONENT) {
                     // 组件
-                    // processComponent()
+                    processComponent(oldVNode, newVNode, container, anchor)
+                    
                 }
         }
     }

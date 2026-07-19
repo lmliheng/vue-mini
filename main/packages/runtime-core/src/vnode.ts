@@ -3,12 +3,17 @@ import { isArray, isFunction, isObject, isString } from "@vue/shared"
 import { normalizeClass } from "packages/shared/src/normalizeProps"
 import { ShapeFlags } from "packages/shared/src/shapeFlags"
 
+
+// TODO: vnode的 __v_skip是什么属性，在哪个文件里定义的
 export interface VNode {
     __v_isVNode: true
     type: any
     props: any
     children: any
     shapeFlag: number
+    // component属性参考component instance部分
+    component: any
+    // el属性需要声明吗
 }
 
 // 组件: 进入isObeject 进入shapefalgs.stateful_comonent

@@ -555,6 +555,56 @@ var Vue = (function (exports) {
     function cloneIfMounted(obj) {
         return obj;
     }
+    /**
+     * instance 的vnode属性和render属性
+     */
+    function renderComponentRoot(instance) {
+        const { vnode, render } = instance;
+        let result;
+        try {
+            if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+                // render!()是什么写法
+                result = normalizeVNode(render());
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+        return result;
+    }
+
+    let uid = 0;
+    /**
+     * 根据虚拟DOM创建组件实例
+     */
+    function createComponentInstance(vnode) {
+        const type = vnode.type;
+        const instance = {
+            uid: uid++,
+            vnode,
+            type, // 组件类型
+            subTree: null, // render函数返回值
+            effect: null, //reactiveEffect实例
+            update: null,
+            render: null //组件内的render函数
+        };
+        return instance;
+    }
+    /**
+     * 规范化组件实例数据
+     * 这有什么用?把type里的render函数赋给了instance的render属性
+     */
+    function setupComponent(instance) {
+        const setupResult = setupStatefulComponent(instance);
+        return setupResult;
+    }
+    function setupStatefulComponent(instance) {
+        finishComponentSetup(instance);
+    }
+    function finishComponentSetup(instance) {
+        const component = instance.type;
+        instance.render = component.render;
+    }
 
     /**
      * @render 渲染函数
@@ -565,6 +615,7 @@ var Vue = (function (exports) {
     function createRenderer(option) {
         return baseCreateRenderer(option);
     }
+    // TODO:需要阅读baseCreateRender
     function baseCreateRenderer(option) {
         const { patchProp: hostPatchProp, insert: hostInsert, createElement: hostCreateElement, setElementText: hostSetElementText, remove: hostRemove, createText: hostCreateText, setText: hostSetText, createComment: hostCreateComment } = option;
         /**
@@ -615,6 +666,19 @@ var Vue = (function (exports) {
                 patchChildren(oldVNode, newVNode, container);
             }
         }
+        function processComponent(oldVNode, newVNode, container, anchor) {
+            if (oldVNode === null) {
+                mountComponent(newVNode, container, anchor);
+            }
+        }
+        const mountComponent = (newVNode, container, anchor) => {
+            newVNode.component = createComponentInstance(newVNode);
+            const instance = newVNode.component;
+            //
+            setupComponent(instance);
+            // 
+            setupRenderEffect(instance, newVNode, container, anchor);
+        };
         /**
          * @
          * 这里面的children是一个数组或者字符串？
@@ -668,7 +732,10 @@ var Vue = (function (exports) {
                         // 元素
                         processElement(oldVNode, newVNode, container, anchor);
                     }
-                    else if (shapeFlag & ShapeFlags.COMPONENT) ;
+                    else if (shapeFlag & ShapeFlags.COMPONENT) {
+                        // 组件
+                        processComponent(oldVNode, newVNode, container, anchor);
+                    }
             }
         };
         /**
@@ -739,6 +806,24 @@ var Vue = (function (exports) {
             }
         };
         /**
+         * 需要再看
+         */
+        const setupRenderEffect = (instance, initialVNode, container, anchor) => {
+            /**
+             * 组件更新
+             */
+            const componentUpdateFn = () => {
+                if (!instance.isMounted) {
+                    const subTree = (instance.subTree = renderComponentRoot(instance));
+                    patch(null, subTree, container, anchor);
+                    initialVNode.el = subTree.el;
+                }
+            };
+            const effect = (instance.effect = new ReactiveEffect(componentUpdateFn, () => quenePreFlushCb(update)));
+            const update = (instance.update = () => effect.run());
+            update();
+        };
+        /**
          * @render入口
          */
         const render = (vnode, container) => {
@@ -749,8 +834,10 @@ var Vue = (function (exports) {
                 }
             }
             else {
+                // 进入patch函数
                 patch(container._vnode || null, vnode, container);
             }
+            // 完成后 在container打上_vnode属性
             container._vnode = vnode;
         };
         // 这样返回...

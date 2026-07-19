@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-render-组件</title>
+    <title>test-render-组件更新</title>
     <script src="../dist/vue.js"></script>
 </head>
 
@@ -11,7 +11,7 @@
 
 <script>
 
-    
+
     const { h, Fragment, render } = Vue
 
     const component = {
@@ -25,9 +25,22 @@
         }
     }
     const vnode = h(component)
-    // vnode type是一个object shapeFlag=4
     console.log(vnode)
     render(vnode, document.querySelector('#app'))
+
+    setTimeout(
+        () => {
+            let component1 = {
+                render() {
+                    return h('p',  '哈哈哈')
+                }
+            }
+            let vnode1 = h(component1)
+            console.log(vnode1)
+            render(vnode1, document.querySelector('#app'))
+
+        }, 2000
+    )
 
 </script>
 

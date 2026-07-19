@@ -9,6 +9,7 @@ let uid = 0
 export function createComponentInstance(vnode) {
     const type = vnode.type
     const instance = {
+        // FIXME：isMounted在哪。
         uid: uid++,
         vnode,
         type, // 组件类型
