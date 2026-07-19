@@ -45,6 +45,8 @@ export function effect<T = any>(
 
 /**
  * @effect依赖类
+ * fn: callback回调函数
+ * 
  */
 export class ReactiveEffect<T = any> {
     computed?: ComputedRefImpl<T>

@@ -20,6 +20,8 @@ export declare let activeEffect: ReactiveEffect | undefined;
 export declare function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions): void;
 /**
  * @effect依赖类
+ * fn: callback回调函数
+ *
  */
 export declare class ReactiveEffect<T = any> {
     fn: () => T;

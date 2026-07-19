@@ -289,11 +289,12 @@ function baseCreateRenderer(option: RendererOptions) {
 
 
     /**
-     * 需要再看
+     * @组件渲染方法
      */
     const setupRenderEffect = (instance, initialVNode, container, anchor) => {
+
         /**
-         * 组件更新
+         * 组件更新方法
          */
         const componentUpdateFn = () => {
             if (!instance.isMounted) {
@@ -302,10 +303,13 @@ function baseCreateRenderer(option: RendererOptions) {
                 initialVNode.el = subTree.el
             }
         }
+
+        // NOTE：组件实例的effect属性 通过 fn和调度器创建effect依赖
         const effect = (instance.effect = new ReactiveEffect(
             componentUpdateFn,
             () => quenePreFlushCb(update)
         ))
+        // NOTE: update函数就是 执行effect中回调函数
         const update = (instance.update = () => effect.run())
         update()
     }

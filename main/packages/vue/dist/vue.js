@@ -42,6 +42,8 @@ var Vue = (function (exports) {
     }
     /**
      * @effect依赖类
+     * fn: callback回调函数
+     *
      */
     class ReactiveEffect {
         fn;
@@ -556,15 +558,17 @@ var Vue = (function (exports) {
         return obj;
     }
     /**
+     *
+     *
      * instance 的vnode属性和render属性
      */
     function renderComponentRoot(instance) {
-        const { vnode, render } = instance;
+        const { vnode, render, data } = instance;
         let result;
         try {
             if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
                 // render!()是什么写法
-                result = normalizeVNode(render());
+                result = normalizeVNode(render.call(data));
             }
         }
         catch (err) {
@@ -580,6 +584,7 @@ var Vue = (function (exports) {
     function createComponentInstance(vnode) {
         const type = vnode.type;
         const instance = {
+            // FIXME：isMounted在哪。
             uid: uid++,
             vnode,
             type, // 组件类型
@@ -604,6 +609,19 @@ var Vue = (function (exports) {
     function finishComponentSetup(instance) {
         const component = instance.type;
         instance.render = component.render;
+        // NOTE: 改变options中的this指向
+        applyOptions(instance);
+    }
+    function applyOptions(instance) {
+        // instance type的data属性 和 dataOptions使用同一内存
+        const { data: dataOptions } = instance.type;
+        if (dataOptions) {
+            const data = dataOptions();
+            if (isObject(data)) {
+                // 数据是对象就进入reactive
+                instance.data = reactive(data);
+            }
+        }
     }
 
     /**
@@ -806,11 +824,11 @@ var Vue = (function (exports) {
             }
         };
         /**
-         * 需要再看
+         * @组件渲染方法
          */
         const setupRenderEffect = (instance, initialVNode, container, anchor) => {
             /**
-             * 组件更新
+             * 组件更新方法
              */
             const componentUpdateFn = () => {
                 if (!instance.isMounted) {
@@ -819,7 +837,9 @@ var Vue = (function (exports) {
                     initialVNode.el = subTree.el;
                 }
             };
+            // NOTE：组件实例的effect属性 通过 fn和调度器创建effect依赖
             const effect = (instance.effect = new ReactiveEffect(componentUpdateFn, () => quenePreFlushCb(update)));
+            // NOTE: update函数就是 执行effect中回调函数
             const update = (instance.update = () => effect.run());
             update();
         };
