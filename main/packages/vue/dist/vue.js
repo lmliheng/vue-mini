@@ -577,6 +577,7 @@ var Vue = (function (exports) {
         return result;
     }
 
+    //TODO：在生命周期中访问响应式数据
     /**
      * @生命周期钩子
      */
@@ -657,7 +658,7 @@ var Vue = (function (exports) {
         // instance type的data属性 和 dataOptions使用同一内存
         const { data: dataOptions, beforeCreate, create, beforeMount, mounted } = instance.type;
         if (beforeCreate) {
-            callHook(beforeCreate);
+            callHook(beforeCreate, instance.data);
         }
         if (dataOptions) {
             const data = dataOptions();
@@ -667,17 +668,17 @@ var Vue = (function (exports) {
             }
         }
         if (create) {
-            callHook(create);
+            callHook(create, instance.data);
         }
         // NOTE: 这种写法
         function registerLifecycleHook(register, hook) {
-            register(hook, instance);
+            register(hook?.bind(instance.data), instance);
         }
         registerLifecycleHook(onBeforeMount, beforeMount); //执行register（hook，instance）
         registerLifecycleHook(onMounted, mounted);
     }
-    function callHook(hook) {
-        hook();
+    function callHook(hook, proxy) {
+        hook.bind(proxy)();
     }
 
     /**

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-render-响应式组件</title>
-    <script src="../dist/vue.js"></script>
+    <title>源码-test-render-响应式组件的更新</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 
 <body>
@@ -10,13 +10,12 @@
 </body>
 
 <script>
+    const { h, render } = Vue
 
-    const { h, Fragment, render } = Vue
-    //NOTE： 把这种含data的组件 叫有状态组件
     const component = {
         data() {
             return {
-                msg: '组件调用响应式数据'
+                msg: 'hello vue 响应式组件'
             }
 
         },
@@ -28,6 +27,12 @@
 
                 }
             }, this.msg)
+        },
+
+        created() {
+            setTimeout(() => {
+                this.msg = '更新了数据'
+            }, 3000)
         }
     }
     const vnode = h(component)
