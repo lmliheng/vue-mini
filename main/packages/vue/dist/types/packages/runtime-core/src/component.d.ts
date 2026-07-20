@@ -20,3 +20,4 @@ export declare function createComponentInstance(vnode: any): {
  * 这有什么用?把type里的render函数赋给了instance的render属性
  */
 export declare function setupComponent(instance: any): void;
+export declare function handleSetResult(instance: any, setupResult: any): void;

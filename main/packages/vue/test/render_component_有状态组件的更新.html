@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-render-响应式组件的更新</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { h, render } = Vue
+
+    const component = {
+        data() {
+            return {
+                msg: 'hello vue 响应式组件'
+            }
+
+        },
+
+        render() {
+            return h('h1', {
+                style: {
+                    color: 'red',
+
+                }
+            }, this.msg)
+        },
+
+        created() {
+            setTimeout(() => {
+                this.msg = '更新了数据'
+            }, 3000)
+        }
+    }
+    const vnode = h(component)
+    // vnode type是一个object shapeFlag=4
+    console.log(vnode)
+    render(vnode, document.querySelector('#app'))
+
+</script>
+
+</html>

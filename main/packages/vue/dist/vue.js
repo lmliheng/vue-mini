@@ -646,11 +646,24 @@ var Vue = (function (exports) {
         return setupResult;
     }
     function setupStatefulComponent(instance) {
-        finishComponentSetup(instance);
+        //NOTE: instance.type.setup属性是在哪定义的
+        // 在type找到setup属性
+        const component = instance.type;
+        const { setup } = component;
+        if (setup) {
+            const setupResult = setup();
+            handleSetResult(instance, setupResult);
+        }
+        else {
+            finishComponentSetup(instance);
+        }
     }
     function finishComponentSetup(instance) {
         const component = instance.type;
-        instance.render = component.render;
+        // 组件不存在时才重新赋值
+        if (!instance.render) {
+            instance.render = component.render;
+        }
         // NOTE: 改变options中的this指向
         applyOptions(instance);
     }
@@ -679,6 +692,12 @@ var Vue = (function (exports) {
     }
     function callHook(hook, proxy) {
         hook.bind(proxy)();
+    }
+    function handleSetResult(instance, setupResult) {
+        if (isFunction(setupResult)) {
+            instance.render = setupResult;
+        }
+        finishComponentSetup(instance);
     }
 
     /**
@@ -899,6 +918,21 @@ var Vue = (function (exports) {
                         m();
                     }
                     initialVNode.el = subTree.el;
+                    instance.isMounted = true;
+                }
+                else {
+                    // 如果说组件已经挂载
+                    let { next, vnode } = instance;
+                    if (!next) {
+                        next = vnode;
+                    }
+                    const nextTree = renderComponentRoot(instance);
+                    // 保存以前的subTree，并在下一步更新subTree属性
+                    const prevTree = instance.subTree;
+                    instance.subTree = nextTree;
+                    patch(prevTree, nextTree, container, anchor);
+                    // 更新next属性的el属性
+                    next.el = nextTree.el;
                 }
             };
             // NOTE：组件实例的effect属性 通过 fn和调度器创建effect依赖

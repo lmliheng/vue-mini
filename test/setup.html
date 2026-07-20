@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<head>
+    <title>源码-test-setup的使用</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { h, render, reactive } = Vue
+
+    const component = {
+        setup() {
+            // 挂载
+            const obj = reactive({
+                name: '张三',
+                id: '1'
+            })
+            // 更新
+            setTimeout(() => {
+                obj.name = 'liheng'
+            }, 2000)
+
+            return () => h('div', obj.name)
+        },
+    }
+    const vnode = h(component)
+    // vnode type是一个object shapeFlag=4
+    console.log(vnode)
+    render(vnode, document.querySelector('#app'))
+
+</script>
+
+</html>

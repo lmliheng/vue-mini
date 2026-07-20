@@ -308,8 +308,20 @@ function baseCreateRenderer(option: RendererOptions) {
                     m()
                 }
                 initialVNode.el = subTree.el
-            }else{
-                //...
+                instance.isMounted = true
+            } else {
+                // 如果说组件已经挂载
+                let { next, vnode } = instance
+                if (!next) {
+                    next = vnode
+                }
+                const nextTree = renderComponentRoot(instance)
+                // 保存以前的subTree，并在下一步更新subTree属性
+                const prevTree = instance.subTree
+                instance.subTree = nextTree
+                patch(prevTree, nextTree, container, anchor)
+                // 更新next属性的el属性
+                next.el = nextTree.el
             }
         }
 

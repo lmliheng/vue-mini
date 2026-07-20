@@ -1,5 +1,5 @@
 import { reactive } from "@vue/reactivity"
-import { isObject } from "@vue/shared"
+import { isFunction, isObject } from "@vue/shared"
 import { onBeforeMount, onMounted } from "./apiLifecycle"
 let uid = 0
 
@@ -39,12 +39,26 @@ export function setupComponent(instance) {
 }
 
 function setupStatefulComponent(instance) {
-    finishComponentSetup(instance)
+    //NOTE: instance.type.setup属性是在哪定义的
+    // 在type找到setup属性
+    const component = instance.type
+    const { setup } = component
+    if (setup) {
+        const setupResult = setup()
+        handleSetResult(instance, setupResult)
+    } else {
+        finishComponentSetup(instance)
+    }
 }
 
 function finishComponentSetup(instance) {
     const component = instance.type
-    instance.render = component.render
+
+    // 组件不存在时才重新赋值
+    if (!instance.render) {
+        instance.render = component.render
+    }
+
     // NOTE: 改变options中的this指向
     applyOptions(instance)
 }
@@ -87,4 +101,14 @@ function applyOptions(instance) {
 
 function callHook(hook: Function, proxy) {
     hook.bind(proxy)()
+}
+
+
+
+export function handleSetResult(instance, setupResult) {
+    if (isFunction(setupResult)) {
+        instance.render = setupResult
+    }
+    finishComponentSetup(instance)
+
 }
