@@ -195,7 +195,7 @@ function baseCreateRenderer(option: RendererOptions) {
                 } else if (shapeFlag & ShapeFlags.COMPONENT) {
                     // 组件
                     processComponent(oldVNode, newVNode, container, anchor)
-                    
+
                 }
         }
     }
@@ -298,9 +298,18 @@ function baseCreateRenderer(option: RendererOptions) {
          */
         const componentUpdateFn = () => {
             if (!instance.isMounted) {
+                const { bm, m } = instance
+                if (bm) {
+                    bm()
+                }
                 const subTree = (instance.subTree = renderComponentRoot(instance))
                 patch(null, subTree, container, anchor)
+                if (m) {
+                    m()
+                }
                 initialVNode.el = subTree.el
+            }else{
+                //...
             }
         }
 

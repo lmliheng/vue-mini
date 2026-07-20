@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-render-组件的生命周期</title>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { h, render } = Vue
+
+    const component = {
+        data() {
+            return {
+                msg: 'hello vue 响应式组件'
+            }
+
+        },
+
+        render() {
+            return h('h1', {
+                style: {
+                    color: 'red',
+
+                }
+            }, this.msg)
+        },
+        beforeCreate() {
+            alert('beforeCreate')
+        },
+        create() {
+            alert('create')
+        },
+        beforeMount() {
+            alert('bm')
+        },
+        // 
+        mouted() {
+            alert('m')
+        }
+    }
+    const vnode = h(component)
+    // vnode type是一个object shapeFlag=4
+    console.log(vnode)
+    render(vnode, document.querySelector('#app'))
+
+    // setTimeout(() => {
+    //     const vnode1 = h(Comment, 'test')
+    //     render(vnode1, document.querySelector('#app'))
+    // }, 5000)
+</script>
+
+</html>

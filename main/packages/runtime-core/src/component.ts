@@ -1,16 +1,7 @@
 import { reactive } from "@vue/reactivity"
 import { isObject } from "@vue/shared"
+import { onBeforeMount, onMounted } from "./apiLifecycle"
 let uid = 0
-
-/**
- * @生命周期钩子
- */
-export const enum LifeclcleHooks {
-    BEFORE_CREATE = 'bc',
-    CREATE = 'c',
-    BEFORE_MOUNT = 'bm',
-    MOUNTED = 'm'
-}
 
 
 /**
@@ -26,13 +17,13 @@ export function createComponentInstance(vnode) {
         subTree: null!, // render函数返回值
         effect: null!, //reactiveEffect实例
         update: null!,
-        render: null! ,//组件内的render函数
+        render: null!,//组件内的render函数
 
-        isMounted:false,
-        bc:null,
-        c:null,
-        bm:null,
-        m:null,
+        isMounted: false,
+        bc: null,
+        c: null,
+        bm: null,
+        m: null,
     }
     return instance
 }
@@ -61,7 +52,6 @@ function finishComponentSetup(instance) {
 
 function applyOptions(instance) {
 
-    
     // instance type的data属性 和 dataOptions使用同一内存
     const {
         data: dataOptions,
@@ -76,13 +66,23 @@ function applyOptions(instance) {
     }
 
     if (dataOptions) {
-
         const data = dataOptions()
         if (isObject(data)) {
             // 数据是对象就进入reactive
             instance.data = reactive(data)
         }
     }
+
+    if (create) {
+        callHook(create)
+    }
+
+    // NOTE: 这种写法
+    function registerLifecycleHook(register: Function, hook?: Function) {
+        register(hook, instance)
+    }
+    registerLifecycleHook(onBeforeMount, beforeMount) //执行register（hook，instance）
+    registerLifecycleHook(onMounted, mounted)
 }
 
 function callHook(hook: Function) {

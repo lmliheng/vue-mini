@@ -577,6 +577,42 @@ var Vue = (function (exports) {
         return result;
     }
 
+    /**
+     * @生命周期钩子
+     */
+    var LifeclcleHooks;
+    (function (LifeclcleHooks) {
+        LifeclcleHooks["BEFORE_CREATE"] = "bc";
+        LifeclcleHooks["CREATE"] = "c";
+        LifeclcleHooks["BEFORE_MOUNT"] = "bm";
+        LifeclcleHooks["MOUNTED"] = "m";
+    })(LifeclcleHooks || (LifeclcleHooks = {}));
+    /**
+     * @注册hooks
+     */
+    function injectHook(type, hook, target) {
+        //Note：target是什么
+        if (target) {
+            target[type] = hook;
+            return hook;
+        }
+    }
+    /**
+     * @创建一个指定的hook的方法
+     *
+     */
+    const createHook = (lifecycle) => {
+        return (hook, target) => injectHook(lifecycle, hook, target);
+    };
+    /**
+     * 创建bm钩子
+     */
+    const onBeforeMount = createHook(LifeclcleHooks.BEFORE_MOUNT);
+    /**
+     * 创建m钩子
+     */
+    const onMounted = createHook(LifeclcleHooks.MOUNTED);
+
     let uid = 0;
     /**
      * 根据虚拟DOM创建组件实例
@@ -591,7 +627,12 @@ var Vue = (function (exports) {
             subTree: null, // render函数返回值
             effect: null, //reactiveEffect实例
             update: null,
-            render: null //组件内的render函数
+            render: null, //组件内的render函数
+            isMounted: false,
+            bc: null,
+            c: null,
+            bm: null,
+            m: null,
         };
         return instance;
     }
@@ -614,7 +655,10 @@ var Vue = (function (exports) {
     }
     function applyOptions(instance) {
         // instance type的data属性 和 dataOptions使用同一内存
-        const { data: dataOptions } = instance.type;
+        const { data: dataOptions, beforeCreate, create, beforeMount, mounted } = instance.type;
+        if (beforeCreate) {
+            callHook(beforeCreate);
+        }
         if (dataOptions) {
             const data = dataOptions();
             if (isObject(data)) {
@@ -622,6 +666,18 @@ var Vue = (function (exports) {
                 instance.data = reactive(data);
             }
         }
+        if (create) {
+            callHook(create);
+        }
+        // NOTE: 这种写法
+        function registerLifecycleHook(register, hook) {
+            register(hook, instance);
+        }
+        registerLifecycleHook(onBeforeMount, beforeMount); //执行register（hook，instance）
+        registerLifecycleHook(onMounted, mounted);
+    }
+    function callHook(hook) {
+        hook();
     }
 
     /**
@@ -832,8 +888,15 @@ var Vue = (function (exports) {
              */
             const componentUpdateFn = () => {
                 if (!instance.isMounted) {
+                    const { bm, m } = instance;
+                    if (bm) {
+                        bm();
+                    }
                     const subTree = (instance.subTree = renderComponentRoot(instance));
                     patch(null, subTree, container, anchor);
+                    if (m) {
+                        m();
+                    }
                     initialVNode.el = subTree.el;
                 }
             };

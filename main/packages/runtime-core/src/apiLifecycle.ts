@@ -1,9 +1,15 @@
-import { LifeclcleHooks } from "./component";
+
+//TODO：在生命周期中访问响应式数据
 
 /**
- * @生命周期api
+ * @生命周期钩子
  */
-
+export const enum LifeclcleHooks {
+    BEFORE_CREATE = 'bc',
+    CREATE = 'c',
+    BEFORE_MOUNT = 'bm',
+    MOUNTED = 'm'
+}
 /**
  * @注册hooks
  */

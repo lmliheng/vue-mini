@@ -9,6 +9,11 @@ export declare function createComponentInstance(vnode: any): {
     effect: never;
     update: never;
     render: never;
+    isMounted: boolean;
+    bc: null;
+    c: null;
+    bm: null;
+    m: null;
 };
 /**
  * 规范化组件实例数据
