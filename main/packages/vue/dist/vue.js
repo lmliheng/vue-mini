@@ -765,6 +765,29 @@ var Vue = (function (exports) {
                 mountComponent(newVNode, container, anchor);
             }
         }
+        /**
+         *
+         * @diff
+         */
+        const patchKeyedChildren = (oldChildren, newChildren, container, parentAnchor) => {
+            let i = 0;
+            newChildren.length;
+            let oldChildrenEnd = oldChildren.length - 1;
+            let newChildrenEnd = newChildren.length - 1;
+            // 至前向后
+            while (i <= oldChildrenEnd && i <= newChildrenEnd) {
+                const oldVNode = oldChildren[i];
+                const newVNode = normalizeVNode(newChildren[i]);
+                // 如果key和type相同 走patch 否则 break
+                if (isSameVNodeType(oldVNode, newVNode)) {
+                    patch(oldVNode, newVNode, container, null);
+                }
+                else {
+                    break;
+                }
+                i++;
+            }
+        };
         const mountComponent = (newVNode, container, anchor) => {
             newVNode.component = createComponentInstance(newVNode);
             const instance = newVNode.component;
@@ -792,7 +815,9 @@ var Vue = (function (exports) {
             if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
                 hostSetElementText(el, vnode.children);
             }
-            else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) ;
+            else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                mountChildren(vnode.children, container, anchor);
+            }
             if (props) {
                 //for of 需要iterable ，如果是对象会报错
                 for (const key in props) {
@@ -861,7 +886,10 @@ var Vue = (function (exports) {
             // 新vn的children是文本
             if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
                 // 旧vn的children是数组
-                if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) ;
+                if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    // 待定
+                    patchKeyedChildren(c1, c2, container);
+                }
                 if (c1 !== c2) {
                     hostSetElementText(container, c2);
                 }

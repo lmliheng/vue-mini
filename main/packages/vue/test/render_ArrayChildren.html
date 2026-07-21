@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<head>
+    <title>test-render-ArrayChildren Diff算法的实现</title>
+    <script src="../dist/vue.js"></script>
+
+</head>
+
+<body>
+    <div id="app"></div>
+</body>
+
+<script>
+    const { h, render } = Vue
+    const vnode = h('div', [
+        h('p', { key: 1 }, 'a'),
+        h('p', { key: 2 }, 'b'),
+        h('p', { key: 3 }, 'c'),
+    ])
+    console.log(vnode)
+
+    render(vnode, document.querySelector('#app'))
+
+    // patchKeyChildren 当children均为Array时
+    setTimeout(() => {
+        const vnode1 = h('div', [
+            h('p', { key: 1 }, 'a'),
+            h('p', { key: 2 }, 'b'),
+            h('p', { key: 3 }, 'd'),
+        ])
+        render(vnode1, document.querySelector('#app'))
+    }, 5000)
+</script>
+
+</html>
