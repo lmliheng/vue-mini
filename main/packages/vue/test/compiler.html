@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-compiler</title>
+    <title>test-compiler ast测试</title>
     <script src="../dist/vue.js"></script>
 </head>
 
@@ -13,21 +13,12 @@
 </body>
 
 <script>
-    const { reactive, effect } = Vue
-    let info = reactive({ name: '张三', age: 18 })
-    console.log(info)
+    // 打印parse出的ast
 
-    effect(() => {
-        document.querySelector('#p1').innerHTML = info.name
-    })
+    const { compile } = Vue
+    const template = `<div class="container">哈哈</div>`
+    const renderFn = compile(template)
 
-    effect(() => {
-        document.querySelector('#p2').innerHTML = info.name
-    })
-
-    setTimeout(() => {
-        info.name = '李四'
-    }, 5000)
 
 </script>
 

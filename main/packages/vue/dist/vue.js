@@ -768,6 +768,7 @@ var Vue = (function (exports) {
         /**
          *
          * @diff
+         *
          */
         const patchKeyedChildren = (oldChildren, newChildren, container, parentAnchor) => {
             let i = 0;
@@ -816,7 +817,6 @@ var Vue = (function (exports) {
                     i++;
                 }
             }
-            // 5. 未知序列（乱序）- 这里需要更复杂的 diff 算法
             else ;
         };
         const mountComponent = (newVNode, container, anchor) => {
@@ -1208,9 +1208,224 @@ var Vue = (function (exports) {
         ensureRenderer().render(...args);
     };
 
+    /**
+     * parse
+     * 生成AST
+     */
+    function baseParse(content) {
+        // 生成parseContext
+        const context = createParseContext(content);
+        // 解析context
+        const children = parseChildren(context, []);
+        // 按规则导出
+        return createRoot(children);
+    }
+    // return :ParseContext
+    function createParseContext(content) {
+        return {
+            source: content
+        };
+    }
+    function createRoot(children) {
+        return {
+            type: NodeTypes.ROOT,
+            children,
+            loc: {}
+        };
+    }
+    /**
+     * @节点类型
+     */
+    var NodeTypes;
+    (function (NodeTypes) {
+        NodeTypes[NodeTypes["ROOT"] = 0] = "ROOT";
+        NodeTypes[NodeTypes["ELEMENT"] = 1] = "ELEMENT";
+        NodeTypes[NodeTypes["TEXT"] = 2] = "TEXT";
+        NodeTypes[NodeTypes["COMMENT"] = 3] = "COMMENT";
+        NodeTypes[NodeTypes["SIMPLE_EXPRESSION"] = 4] = "SIMPLE_EXPRESSION";
+        NodeTypes[NodeTypes["INTERPOLATION"] = 5] = "INTERPOLATION";
+        NodeTypes[NodeTypes["ATTRIBUTE"] = 6] = "ATTRIBUTE";
+        NodeTypes[NodeTypes["DIRECTIVE"] = 7] = "DIRECTIVE";
+        // containers
+        NodeTypes[NodeTypes["COMPOUND_EXPRESSION"] = 8] = "COMPOUND_EXPRESSION";
+        NodeTypes[NodeTypes["IF"] = 9] = "IF";
+        NodeTypes[NodeTypes["IF_BRANCH"] = 10] = "IF_BRANCH";
+        NodeTypes[NodeTypes["FOR"] = 11] = "FOR";
+        NodeTypes[NodeTypes["TEXT_CALL"] = 12] = "TEXT_CALL";
+        // codegen
+        NodeTypes[NodeTypes["VNODE_CALL"] = 13] = "VNODE_CALL";
+        NodeTypes[NodeTypes["JS_CALL_EXPRESSION"] = 14] = "JS_CALL_EXPRESSION";
+        NodeTypes[NodeTypes["JS_OBJECT_EXPRESSION"] = 15] = "JS_OBJECT_EXPRESSION";
+        NodeTypes[NodeTypes["JS_PROPERTY"] = 16] = "JS_PROPERTY";
+        NodeTypes[NodeTypes["JS_ARRAY_EXPRESSION"] = 17] = "JS_ARRAY_EXPRESSION";
+        NodeTypes[NodeTypes["JS_FUNCTION_EXPRESSION"] = 18] = "JS_FUNCTION_EXPRESSION";
+        NodeTypes[NodeTypes["JS_CONDITIONAL_EXPRESSION"] = 19] = "JS_CONDITIONAL_EXPRESSION";
+        NodeTypes[NodeTypes["JS_CACHE_EXPRESSION"] = 20] = "JS_CACHE_EXPRESSION";
+        // ssr codegen
+        NodeTypes[NodeTypes["JS_BLOCK_STATEMENT"] = 21] = "JS_BLOCK_STATEMENT";
+        NodeTypes[NodeTypes["JS_TEMPLATE_LITERAL"] = 22] = "JS_TEMPLATE_LITERAL";
+        NodeTypes[NodeTypes["JS_IF_STATEMENT"] = 23] = "JS_IF_STATEMENT";
+        NodeTypes[NodeTypes["JS_ASSIGNMENT_EXPRESSION"] = 24] = "JS_ASSIGNMENT_EXPRESSION";
+        NodeTypes[NodeTypes["JS_SEQUENCE_EXPRESSION"] = 25] = "JS_SEQUENCE_EXPRESSION";
+        NodeTypes[NodeTypes["JS_RETURN_STATEMENT"] = 26] = "JS_RETURN_STATEMENT";
+    })(NodeTypes || (NodeTypes = {}));
+    var ElementTypes;
+    (function (ElementTypes) {
+        ElementTypes[ElementTypes["ELEMENT"] = 0] = "ELEMENT";
+        ElementTypes[ElementTypes["COMPONENT"] = 1] = "COMPONENT";
+        // 插槽
+        ElementTypes[ElementTypes["SLOT"] = 2] = "SLOT";
+        //template
+        ElementTypes[ElementTypes["TEMPLATE"] = 3] = "TEMPLATE";
+    })(ElementTypes || (ElementTypes = {}));
+    var TagType;
+    (function (TagType) {
+        TagType[TagType["Start"] = 0] = "Start";
+        TagType[TagType["End"] = 1] = "End";
+    })(TagType || (TagType = {}));
+    /**
+     * 对标签处理的入口函数
+     * 有parseChildren和parseTag函数
+     */
+    // NOTE: context: ParseContext
+    function parseElement(context, ancestors) {
+        const element = parseTag(context, TagType.Start);
+        ancestors.push(element);
+        const children = parseChildren(context, ancestors);
+        ancestors.pop();
+        element.children = children;
+        if (startWithEndTagOpen(context.source, element.tag)) {
+            parseTag(context, TagType.End);
+        }
+        // 处理完后返回element
+        return element;
+    }
+    /**
+     * 解析标签
+     */
+    function parseTag(context, type) {
+        // NOTE： 这个正则表达式是什么意思
+        const match = /^<\/?[a-z][^\r\n\t\f />]*/i.exec(context.source);
+        const tag = match[1];
+        advanceBy(context, match[0].length);
+        let isSelfClosing = startWith(context.source, '/>');
+        advanceBy(context, isSelfClosing ? 2 : 1);
+        let tagType = ElementTypes.ELEMENT;
+        return {
+            type: NodeTypes.ELEMENT,
+            tag,
+            tagType,
+            // 属性的解析待处理
+            props: []
+        };
+    }
+    /**
+     * 核心函数
+     */
+    function parseChildren(context, ancestors) {
+        const nodes = [];
+        //NOTE : 这个while做了什么
+        while (!isEnd(context, ancestors)) {
+            const s = context.source;
+            let node;
+            if (startWith(s, '{{')) ;
+            else if (s[0] === '<') {
+                if (/[a-z]/i.test(s[1])) {
+                    node = parseElement(context, ancestors);
+                }
+            }
+            // 如果node不存在，那么tokens是文本节点
+            if (!node) {
+                node = parseText(context);
+            }
+            pushNode(nodes, node);
+        }
+        return nodes;
+    }
+    /**
+     * @advanceBy
+     * 起到一种状态的转变，在多个函数里使用，表示context.source的不断截短
+     * 对context的source属性 从numberofcharacters到末尾的索引截取
+     */
+    function advanceBy(context, numberOfCharacters) {
+        const { source } = context;
+        context.source = source.slice(numberOfCharacters);
+    }
+    /**
+     * 从<结束,
+     *
+     */
+    function parseText(context) {
+        const endTokens = ['<', '{{'];
+        let endIndex = context.source.lengthh;
+        // 找到最后一个结束标志，如果是...<{{...，得到{{的索引
+        for (let i = 0; i < endTokens.length; i++) {
+            const index = context.source.indexOf(endTokens[i], 1);
+            if (index !== -1 && endIndex > index) {
+                endIndex = index;
+            }
+        }
+        const content = parseTextData(context, endIndex);
+        return {
+            type: NodeTypes.TEXT,
+            content
+        };
+    }
+    function parseTextData(context, length) {
+        const rawText = context.source.slice(0, length);
+        // context.source 后移length单位长度
+        advanceBy(context, length);
+        return rawText;
+    }
+    /**
+     * startwith
+     * 也就是startswith
+     */
+    function startWith(source, searchString) {
+        return source.startsWith(searchString);
+    }
+    /**
+     *
+     * ancestors是什么,是一个数组
+     */
+    // context: ParserContext
+    function isEnd(context, ancestors) {
+        const s = context.source;
+        if (startWith(s, '</')) {
+            for (let i = ancestors.length - 1; i >= 0; i--) {
+                if (startWithEndTagOpen(s, ancestors[i].tag)) {
+                    return true;
+                }
+            }
+        }
+        return !s;
+    }
+    /**
+     *
+     */
+    function startWithEndTagOpen(source, tag) {
+        return ((startWith(source, '</')) &&
+            (source.slice(2, 2 + tag.length).toLowerCase() === tag.toLowerCase()) &&
+            (/[\t\r\n\f />]/.test(source[2 + tag.length] || '>')));
+    }
+    function pushNode(nodes, node) {
+        nodes.push(node);
+    }
+
+    function baseCompile(template, option) {
+        const ast = baseParse(template);
+        console.log('ast:', ast);
+        return {};
+    }
+
+    function compile(template, options) {
+        return baseCompile(template);
+    }
+
     exports.Comment = Comment$1;
     exports.Fragment = Fragment;
     exports.Text = Text$1;
+    exports.compile = compile;
     exports.computed = computed;
     exports.effect = effect;
     exports.h = h;

@@ -14,3 +14,10 @@
 5.在依赖触发时，需要谨记，先触发 computed 的 effect，再触发非 computed 的effect
 
 ### watch
+
+
+### compile
+
+标签->AST->renderFn
+
+<div><p>1<p><p>2<p><div>

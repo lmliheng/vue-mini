@@ -1,0 +1,55 @@
+export interface ParseContext {
+    source: string;
+}
+/**
+ * parse
+ * 生成AST
+ */
+export declare function baseParse(content: string): {
+    type: NodeTypes;
+    children: any;
+    loc: {};
+};
+export declare function createRoot(children: any): {
+    type: NodeTypes;
+    children: any;
+    loc: {};
+};
+/**
+ * @节点类型
+ */
+export declare enum NodeTypes {
+    ROOT = 0,
+    ELEMENT = 1,
+    TEXT = 2,
+    COMMENT = 3,
+    SIMPLE_EXPRESSION = 4,
+    INTERPOLATION = 5,
+    ATTRIBUTE = 6,
+    DIRECTIVE = 7,
+    COMPOUND_EXPRESSION = 8,
+    IF = 9,
+    IF_BRANCH = 10,
+    FOR = 11,
+    TEXT_CALL = 12,
+    VNODE_CALL = 13,
+    JS_CALL_EXPRESSION = 14,
+    JS_OBJECT_EXPRESSION = 15,
+    JS_PROPERTY = 16,
+    JS_ARRAY_EXPRESSION = 17,
+    JS_FUNCTION_EXPRESSION = 18,
+    JS_CONDITIONAL_EXPRESSION = 19,
+    JS_CACHE_EXPRESSION = 20,
+    JS_BLOCK_STATEMENT = 21,
+    JS_TEMPLATE_LITERAL = 22,
+    JS_IF_STATEMENT = 23,
+    JS_ASSIGNMENT_EXPRESSION = 24,
+    JS_SEQUENCE_EXPRESSION = 25,
+    JS_RETURN_STATEMENT = 26
+}
+export declare enum ElementTypes {
+    ELEMENT = 0,
+    COMPONENT = 1,
+    SLOT = 2,
+    TEMPLATE = 3
+}
