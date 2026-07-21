@@ -508,7 +508,7 @@ var Vue = (function (exports) {
         return value ? value.__v_isVNode === true : false;
     }
     function isSameVNodeType(n1, n2) {
-        return n1.type === n2.type;
+        return n1.type === n2.type && n1.key === n2.key;
     }
 
     /**
@@ -757,7 +757,7 @@ var Vue = (function (exports) {
                 mountChildren(newVNode.children, container, anchor);
             }
             else {
-                patchChildren(oldVNode, newVNode, container);
+                patchChildren(oldVNode, newVNode, container, anchor);
             }
         }
         function processComponent(oldVNode, newVNode, container, anchor) {
@@ -771,14 +771,12 @@ var Vue = (function (exports) {
          */
         const patchKeyedChildren = (oldChildren, newChildren, container, parentAnchor) => {
             let i = 0;
-            newChildren.length;
             let oldChildrenEnd = oldChildren.length - 1;
             let newChildrenEnd = newChildren.length - 1;
-            // 至前向后
+            // 1. 从前向后同步
             while (i <= oldChildrenEnd && i <= newChildrenEnd) {
                 const oldVNode = oldChildren[i];
                 const newVNode = normalizeVNode(newChildren[i]);
-                // 如果key和type相同 走patch 否则 break
                 if (isSameVNodeType(oldVNode, newVNode)) {
                     patch(oldVNode, newVNode, container, null);
                 }
@@ -787,6 +785,39 @@ var Vue = (function (exports) {
                 }
                 i++;
             }
+            // 2. 从后向前同步
+            while (i <= oldChildrenEnd && i <= newChildrenEnd) {
+                const oldVNode = oldChildren[oldChildrenEnd];
+                const newVNode = normalizeVNode(newChildren[newChildrenEnd]);
+                if (isSameVNodeType(oldVNode, newVNode)) {
+                    patch(oldVNode, newVNode, container, null);
+                }
+                else {
+                    break;
+                }
+                oldChildrenEnd--;
+                newChildrenEnd--;
+            }
+            // 3. 新增节点（新列表更长）
+            if (i > oldChildrenEnd) {
+                if (i <= newChildrenEnd) {
+                    const nextPos = newChildrenEnd + 1;
+                    const anchor = nextPos < newChildren.length ? newChildren[nextPos].el : parentAnchor;
+                    while (i <= newChildrenEnd) {
+                        patch(null, normalizeVNode(newChildren[i]), container, anchor);
+                        i++;
+                    }
+                }
+            }
+            // 4. 删除节点（旧列表更长）
+            else if (i > newChildrenEnd) {
+                while (i <= oldChildrenEnd) {
+                    unmount(oldChildren[i]);
+                    i++;
+                }
+            }
+            // 5. 未知序列（乱序）- 这里需要更复杂的 diff 算法
+            else ;
         };
         const mountComponent = (newVNode, container, anchor) => {
             newVNode.component = createComponentInstance(newVNode);
@@ -805,7 +836,8 @@ var Vue = (function (exports) {
                 children = children.split('');
             }
             for (let i = 0; i < children.length; i++) {
-                const child = (children = normalizeVNode(children[i]));
+                const child = normalizeVNode(children[i]);
+                // const child = (children = normalizeVNode(children[i]))
                 patch(null, child, container, anchor);
             }
         };
@@ -816,7 +848,7 @@ var Vue = (function (exports) {
                 hostSetElementText(el, vnode.children);
             }
             else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-                mountChildren(vnode.children, container, anchor);
+                mountChildren(vnode.children, el, anchor);
             }
             if (props) {
                 //for of 需要iterable ，如果是对象会报错
@@ -871,7 +903,7 @@ var Vue = (function (exports) {
             const el = (newVNode.el = oldVNode.el);
             const oldProps = oldVNode.props || EMPTY_OBJ;
             const newProps = newVNode.props || EMPTY_OBJ;
-            patchChildren(oldVNode, newVNode, el);
+            patchChildren(oldVNode, newVNode, el, null);
             // 不是patchProp
             patchProps(el, newVNode, oldProps, newProps);
         };
@@ -888,7 +920,7 @@ var Vue = (function (exports) {
                 // 旧vn的children是数组
                 if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                     // 待定
-                    patchKeyedChildren(c1, c2, container);
+                    patchKeyedChildren(c1, c2, container, anchor);
                 }
                 if (c1 !== c2) {
                     hostSetElementText(container, c2);
@@ -896,7 +928,10 @@ var Vue = (function (exports) {
                 // 这里为什么要这样写if
             }
             else {
-                if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) ;
+                if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    // diff计算
+                    patchKeyedChildren(c1, c2, container, anchor);
+                }
                 else {
                     if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
                         hostSetElementText(container, '');

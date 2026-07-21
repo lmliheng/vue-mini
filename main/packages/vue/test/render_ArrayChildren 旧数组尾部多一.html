@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <head>
-    <title>test-render-ArrayChildren Diff算法的实现  从前至后</title>
+    <title>test-render-ArrayChildren Diff算法的实现 多于尾部</title>
     <script src="../dist/vue.js"></script>
 
 </head>
@@ -16,6 +16,7 @@
         h('p', { key: 1 }, 'a'),
         h('p', { key: 2 }, 'b'),
         h('p', { key: 3 }, 'c'),
+        h('p', { key: 4 }, 'd'),
     ])
     console.log(vnode)
 
@@ -26,10 +27,11 @@
         const vnode1 = h('div', [
             h('p', { key: 1 }, 'a'),
             h('p', { key: 2 }, 'b'),
-            h('p', { key: 3 }, 'd'),
+            h('p', { key: 3 }, 'c'),
+
         ])
         render(vnode1, document.querySelector('#app'))
-    }, 5000)
+    }, 2000)
 </script>
 
 </html>

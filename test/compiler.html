@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<head>
+    <title>源码 test-compiler</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p id="p1"></p>
+        <p id="p2"></p>
+    </div>
+</body>
+
+<script>
+    const { compile, render, h } = Vue
+    const template = `<div class="container">
+        <h1>Hello, Vue!</h1>
+        <p>这是一个简单的html模板编译</p>
+    </div>`
+
+    const renderFn = compile(template)
+
+    const component = {
+        render: renderFn
+    }
+    let vnode = h(component)
+    render(vnode, document.querySelector('#app'))
+    console.log(renderFn)
+
+</script>
+
+</html>

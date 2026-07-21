@@ -123,23 +123,60 @@ function baseCreateRenderer(option: RendererOptions) {
     /**
      * 
      * @diff
+     * 
      */
     const patchKeyedChildren = (oldChildren, newChildren, container, parentAnchor) => {
         let i = 0
-        const newChildrenLength = newChildren.length
         let oldChildrenEnd = oldChildren.length - 1
         let newChildrenEnd = newChildren.length - 1
-        // 至前向后
+
+        // 1. 从前向后同步
         while (i <= oldChildrenEnd && i <= newChildrenEnd) {
             const oldVNode = oldChildren[i]
             const newVNode = normalizeVNode(newChildren[i])
-            // 如果key和type相同 走patch 否则 break
             if (isSameVNodeType(oldVNode, newVNode)) {
                 patch(oldVNode, newVNode, container, null)
             } else {
                 break
             }
             i++
+        }
+
+        // 2. 从后向前同步
+        while (i <= oldChildrenEnd && i <= newChildrenEnd) {
+            const oldVNode = oldChildren[oldChildrenEnd]
+            const newVNode = normalizeVNode(newChildren[newChildrenEnd])
+            if (isSameVNodeType(oldVNode, newVNode)) {
+                patch(oldVNode, newVNode, container, null)
+            } else {
+                break
+            }
+            oldChildrenEnd--
+            newChildrenEnd--
+        }
+
+        // 3. 新增节点（新列表更长）
+        if (i > oldChildrenEnd) {
+            if (i <= newChildrenEnd) {
+                const nextPos = newChildrenEnd + 1
+                const anchor = nextPos < newChildren.length ? newChildren[nextPos].el : parentAnchor
+                while (i <= newChildrenEnd) {
+                    patch(null, normalizeVNode(newChildren[i]), container, anchor)
+                    i++
+                }
+            }
+        }
+        // 4. 删除节点（旧列表更长）
+        else if (i > newChildrenEnd) {
+            while (i <= oldChildrenEnd) {
+                unmount(oldChildren[i])
+                i++
+            }
+        }
+        
+        else {
+            //NOTE: 乱序
+           
         }
     }
 
@@ -161,7 +198,8 @@ function baseCreateRenderer(option: RendererOptions) {
             children = children.split('')
         }
         for (let i = 0; i < children.length; i++) {
-            const child = (children = normalizeVNode(children[i]))
+            const child = normalizeVNode(children[i])
+            // const child = (children = normalizeVNode(children[i]))
             patch(null, child, container, anchor)
         }
     }
@@ -175,7 +213,7 @@ function baseCreateRenderer(option: RendererOptions) {
         if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
             hostSetElementText(el, vnode.children)
         } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-            mountChildren(vnode.children, container, anchor)
+            mountChildren(vnode.children, el, anchor)
         }
 
         if (props) {
@@ -267,7 +305,7 @@ function baseCreateRenderer(option: RendererOptions) {
         } else {
             if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                 // diff计算
-
+                patchKeyedChildren(c1, c2, container, anchor)
 
 
 
