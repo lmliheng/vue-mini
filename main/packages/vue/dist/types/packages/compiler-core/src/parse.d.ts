@@ -4,6 +4,8 @@ export interface ParseContext {
 /**
  * parse
  * 生成AST
+ *
+ * 再转化为js AST
  */
 export declare function baseParse(content: string): {
     type: NodeTypes;

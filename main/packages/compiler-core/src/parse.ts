@@ -15,16 +15,13 @@ export function baseParse(content: string) {
     const context = createParseContext(content)
     // 解析context
     const children = parseChildren(context, [])
-    // 按规则导出
     return createRoot(children)
 }
 
-// return :ParseContext
 function createParseContext(content: string): ParseContext {
     return {
         source: content
     }
-
 }
 
 
@@ -111,7 +108,7 @@ function parseElement(context, ancestors) {
  */
 function parseTag(context: any, type: TagType): any {
     // NOTE： 这个正则表达式是什么意思
-    const match: any = /^<\/?[a-z][^\r\n\t\f />]*/i.exec(context.source)
+    const match: any = /^<\/?([a-z][^\r\n\t\f />]*)/i.exec(context.source)
     const tag = match[1]
     advanceBy(context, match[0].length)
 
@@ -176,7 +173,7 @@ function advanceBy(context, numberOfCharacters: number): void {
  */
 function parseText(context) {
     const endTokens = ['<', '{{']
-    let endIndex = context.source.lengthh
+    let endIndex = context.source.length
 
     // 找到最后一个结束标志，如果是...<{{...，得到{{的索引
     for (let i = 0; i < endTokens.length; i++) {

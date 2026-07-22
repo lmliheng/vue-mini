@@ -1211,16 +1211,16 @@ var Vue = (function (exports) {
     /**
      * parse
      * 生成AST
+     *
+     * 再转化为js AST
      */
     function baseParse(content) {
         // 生成parseContext
         const context = createParseContext(content);
         // 解析context
         const children = parseChildren(context, []);
-        // 按规则导出
         return createRoot(children);
     }
-    // return :ParseContext
     function createParseContext(content) {
         return {
             source: content
@@ -1305,7 +1305,7 @@ var Vue = (function (exports) {
      */
     function parseTag(context, type) {
         // NOTE： 这个正则表达式是什么意思
-        const match = /^<\/?[a-z][^\r\n\t\f />]*/i.exec(context.source);
+        const match = /^<\/?([a-z][^\r\n\t\f />]*)/i.exec(context.source);
         const tag = match[1];
         advanceBy(context, match[0].length);
         let isSelfClosing = startWith(context.source, '/>');
@@ -1357,7 +1357,7 @@ var Vue = (function (exports) {
      */
     function parseText(context) {
         const endTokens = ['<', '{{'];
-        let endIndex = context.source.lengthh;
+        let endIndex = context.source.length;
         // 找到最后一个结束标志，如果是...<{{...，得到{{的索引
         for (let i = 0; i < endTokens.length; i++) {
             const index = context.source.indexOf(endTokens[i], 1);
